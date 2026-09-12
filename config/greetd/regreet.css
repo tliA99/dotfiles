@@ -1,0 +1,212 @@
+/*
+ * ReGreet — Tokyo Night Storm
+ *   /etc/greetd/regreet.css に置かれます
+ *
+ * GTK4 の CSS です。ウィジェットには名前(#id)が付いていないので、
+ * 要素名とスタイルクラスで指定します。ReGreet の構造は
+ * src/gui/templates.rs のとおりで、要点は次の3つです。
+ *
+ *   - 一番外が gtk::Overlay。背景画像は gtk::Picture
+ *   - ログインカードと時計はどちらも .background クラスの付いた frame
+ *   - 時計の frame だけ直下が label（カードの直下は grid）なので、
+ *     `frame.background > label` で時計だけを狙えます
+ *
+ * GTK の CSS には blur がないので、すりガラス風は背景画像の上に
+ * 半透明を重ねて出しています。壁紙が明るいと文字が読みにくくなるので、
+ * 差し替えるときは暗めの画像を選んでください。
+ */
+
+@define-color bg       #1a1b26;
+@define-color surface  #292e42;
+@define-color fg       #c0caf5;
+@define-color muted    #565f89;
+@define-color blue     #7aa2f7;
+@define-color cyan     #7dcfff;
+@define-color red      #f7768e;
+@define-color magenta  #bb9af7;
+
+/* 背景画像を見せるため、ウィンドウ自体は透明にする */
+window,
+window.background {
+  background-color: transparent;
+  color: @fg;
+}
+
+/* ---------------------------------------------- ログインカード / 時計 */
+
+frame.background {
+  background-color: rgba(26, 27, 38, 0.80);
+  border: 1px solid rgba(122, 162, 247, 0.30);
+  border-radius: 18px;
+  color: @fg;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+}
+
+/* 時計。frame.background の直下が label なのはこちらだけ。
+   上端に張り付く角丸なしの指定は ReGreet 側の inline CSS が持っています。 */
+frame.background > label {
+  padding: 14px 28px 16px 28px;
+  color: @fg;
+}
+
+label {
+  color: @fg;
+}
+
+/* 「User:」「Session:」などの見出し */
+grid > label {
+  color: @muted;
+  font-weight: 500;
+}
+
+/* 上部のメッセージ（greeting_msg） */
+grid > label:first-child {
+  color: @fg;
+  font-size: 15px;
+}
+
+/* ---------------------------------------------- 入力欄 */
+
+entry,
+passwordentry {
+  background-color: rgba(41, 46, 66, 0.92);
+  background-image: none;
+  color: @fg;
+  caret-color: @blue;
+  border: 1px solid rgba(122, 162, 247, 0.22);
+  border-radius: 10px;
+  min-height: 40px;
+  padding: 0 12px;
+  box-shadow: none;
+}
+
+entry:focus,
+passwordentry:focus,
+entry:focus-within,
+passwordentry:focus-within {
+  border-color: @blue;
+  box-shadow: 0 0 0 2px rgba(122, 162, 247, 0.22);
+}
+
+entry image,
+passwordentry image {
+  color: @muted;
+}
+
+/* ---------------------------------------------- コンボボックス */
+
+combobox button,
+combobox button.combo {
+  background-color: rgba(41, 46, 66, 0.92);
+  background-image: none;
+  color: @fg;
+  border: 1px solid rgba(122, 162, 247, 0.22);
+  border-radius: 10px;
+  min-height: 40px;
+  padding: 0 12px;
+  box-shadow: none;
+}
+
+combobox button:hover {
+  border-color: @blue;
+}
+
+popover contents,
+popover.background contents {
+  background-color: @surface;
+  color: @fg;
+  border: 1px solid rgba(122, 162, 247, 0.28);
+  border-radius: 12px;
+}
+
+/* ---------------------------------------------- ボタン */
+
+button {
+  background-image: none;
+  border-radius: 10px;
+  min-height: 38px;
+  padding: 0 16px;
+  box-shadow: none;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+/* 手入力トグル（鉛筆アイコン） */
+togglebutton {
+  background-color: transparent;
+  color: @muted;
+  border: 1px solid rgba(122, 162, 247, 0.18);
+}
+
+togglebutton:hover {
+  color: @fg;
+  border-color: @blue;
+}
+
+togglebutton:checked {
+  background-color: rgba(122, 162, 247, 0.20);
+  color: @blue;
+  border-color: @blue;
+}
+
+/* Cancel */
+button:not(.suggested-action):not(.destructive-action) {
+  background-color: rgba(86, 95, 137, 0.20);
+  color: @fg;
+  border: 1px solid rgba(122, 162, 247, 0.18);
+}
+
+button:not(.suggested-action):not(.destructive-action):hover {
+  background-color: rgba(86, 95, 137, 0.35);
+}
+
+/* Login */
+button.suggested-action {
+  background-color: @blue;
+  color: @bg;
+  font-weight: bold;
+  border: 1px solid @blue;
+}
+
+button.suggested-action:hover {
+  background-color: @cyan;
+  border-color: @cyan;
+}
+
+/* Reboot / Power Off */
+button.destructive-action {
+  background-color: rgba(247, 118, 142, 0.12);
+  color: @red;
+  border: 1px solid rgba(247, 118, 142, 0.35);
+}
+
+button.destructive-action:hover {
+  background-color: @red;
+  color: @bg;
+  border-color: @red;
+}
+
+button:focus-visible {
+  outline: 2px solid @magenta;
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------- 通知バー */
+
+infobar,
+infobar > revealer > box {
+  background-color: rgba(41, 46, 66, 0.92);
+  color: @fg;
+  border: 1px solid rgba(122, 162, 247, 0.28);
+  border-radius: 12px;
+}
+
+infobar.error,
+infobar.error > revealer > box {
+  border-color: @red;
+  color: @red;
+}
+
+infobar.warning,
+infobar.warning > revealer > box {
+  border-color: #e0af68;
+}
