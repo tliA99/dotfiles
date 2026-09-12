@@ -221,6 +221,8 @@ tail -f $XDG_RUNTIME_DIR/hypr/*/hyprland.log
 | foot が `invalid section name colors` | foot 1.26 で `[colors]` は廃止。`[colors-dark]` / `[colors-light]` に分かれました |
 | ログイン画面が真っ黒 / 出ない | `journalctl -b -u greetd`。`Ctrl+Alt+F2` で TTY に逃げられます |
 | ログイン画面の壁紙が出ない | `/usr/share/backgrounds/hypr/wall.png` が無い。greeter は `$HOME` を読めません |
+| 全体が大きすぎる / 小さすぎる | `hyprctl monitors` の `scale:`。`hyprland.lua` の `monitor_scale` で調整 |
+| XWayland アプリだけぼやける | スケールが端数（1.25 / 1.5）になっている。整数倍率にすると直ります |
 | 日本語入力が出ない | `fcitx5 -d` が起動しているか。XWayland アプリは `XMODIFIERS=@im=fcitx` が必要 |
 
 デバイス名（トラックポイントや Lid Switch）が合っているかは:
@@ -250,10 +252,50 @@ blur = {
 `animations.borderangle` の `loop` スタイルは、画面に何も映っていなくても
 リフレッシュレート分だけ再描画が走るので使っていません。
 
-### 解像度・スケール
+### 解像度・スケール（表示が大きすぎる / 小さすぎるとき）
 
-`hl.monitor` の `scale = "auto"` は PPI から倍率を決めるので、1920x1080 モデルでも
-2560x1440 / 3840x2160 モデルでもそのまま動きます。気に入らなければ数値で固定してください。
+`hyprland.lua` の先頭近くにある `monitor_scale` を変えてください。
+
+Hyprland の `scale = "auto"` は**使っていません**。auto は対角 PPI だけで決め打ちしていて
+（`src/output/Monitor.cpp` の `getDefaultScale()`。140 超で 1.5 倍、200 超で 2 倍）、
+14 インチの 1920x1080 は 158 PPI なので 1.5 倍が選ばれてしまいます。
+論理解像度が 1280x720 相当になり、何もかも大きく表示されます。
+
+| パネル | 対角PPI | `auto` の結果 | おすすめ | 適用後の論理解像度 |
+| --- | --- | --- | --- | --- |
+| 1920x1080 | 158 | 1.5 | **1** | 1920x1080 |
+| 2560x1440 | 210 | 2 | **1.25** | 2048x1152 |
+| 3840x2160 | 315 | 2 | **2** | 1920x1080 |
+
+現在の倍率の確認と、再起動せずに試す方法:
+
+```bash
+hyprctl monitors                                          # scale: の行を見る
+hyprctl eval 'hl.monitor({ output = "eDP-1", scale = 1 })'  # その場で適用
+```
+
+`hyprctl eval` での変更は再読み込みで元に戻るので、気に入った値を
+`monitor_scale` に書いてから `hyprctl reload` してください。
+
+端数倍率（1.25 / 1.5）は、XWayland 経由のアプリが一度拡大されてぼやけます。
+整数倍率で収まるならそちらが無難です。
+
+### スケールを変えずに文字だけ大きく / 小さくしたい
+
+倍率を触るとレイアウト全体が動くので、文字サイズだけ調整したい場合はこちらです。
+
+| 対象 | 場所 | 項目 |
+| --- | --- | --- |
+| ターミナル | `config/foot/foot.ini` | `font=...:size=10.5` |
+| ステータスバー | `config/waybar/style.css` | `* { font-size: 13px }` と `config.jsonc` の `height` |
+| ランチャ | `config/wofi/style.css` | `* { font-size: 14px }` |
+| 通知 | `config/swaync/style.css` | `* { font-size: 13px }` |
+| ロック画面 | `config/hypr/hyprlock.conf` | 各ウィジェットの `font_size` |
+| GTK アプリ全般 | `nwg-look` か `gsettings` | `org.gnome.desktop.interface font-name` |
+| カーソル | `config/hypr/hyprland.lua` | `hl.env("XCURSOR_SIZE", "24")` |
+
+タイル間の余白や角丸を詰めたい場合は `hyprland.lua` の `general.gaps_in` /
+`gaps_out` と `decoration.rounding` です。
 
 ### カーネルパラメータ
 

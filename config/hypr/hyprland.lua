@@ -36,17 +36,35 @@ local clipboard    = "cliphist list | wofi --dmenu | cliphist decode | wl-copy"
 
 ------------------------------------------------------------------ モニタ
 
--- scale = "auto" にしておくと PPI から倍率を決めるので、
--- 1920x1080 モデルでも 2560x1440 / 3840x2160 モデルでもそのまま動きます。
--- 気に入らなければ scale = 1 や 2 に固定してください（`hyprctl monitors` で確認）。
+-- ★ 表示が大きすぎる / 小さすぎるときは、まずここを変えてください。
+--
+-- scale = "auto" は使いません。Hyprland の auto は対角 PPI だけで決め打ちしていて
+-- （140 超で 1.5 倍、200 超で 2 倍。src/output/Monitor.cpp の getDefaultScale）、
+-- 14 インチの 1920x1080 は 158 PPI なので 1.5 倍が選ばれてしまいます。
+-- 論理解像度が 1280x720 相当になり、何もかも大きく表示されます。
+--
+--   パネル       対角PPI   auto     おすすめ   scale 適用後の論理解像度
+--   1920x1080      158     1.5  ->  1          1920x1080
+--   2560x1440      210     2    ->  1.25       2048x1152
+--   3840x2160      315     2    ->  2          1920x1080
+--
+-- 自分のパネルと現在の倍率は `hyprctl monitors` で確認できます。
+-- 再起動せずに試すなら:
+--   hyprctl eval 'hl.monitor({ output = "eDP-1", scale = 1 })'
+--
+-- 端数倍率（1.25 や 1.5）は XWayland 経由のアプリがぼやけます。
+-- 整数倍率で収まるならそちらが無難です。
+local monitor_scale = 1
+
 hl.monitor({
     output   = "eDP-1",
     mode     = "preferred",
     position = "0x0",
-    scale    = "auto",
+    scale    = monitor_scale,
 })
 
--- 外部モニタは自動で右に並べる（マッチしなかった全モニタのフォールバック）
+-- 外部モニタは自動で右に並べる（マッチしなかった全モニタのフォールバック）。
+-- 一般的な 24〜27 インチは PPI が 140 未満なので auto は 1 を返します。
 hl.monitor({
     output   = "",
     mode     = "preferred",
