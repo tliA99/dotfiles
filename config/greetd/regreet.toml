@@ -1,0 +1,42 @@
+#
+# ReGreet — ログイン画面
+#   /etc/greetd/regreet.toml に置かれます
+#
+# セッション一覧は /usr/share/wayland-sessions から拾われます。
+# Hyprland のパッケージが hyprland.desktop を置くので、そこに "Hyprland" が出ます
+# （中身は Exec=start-hyprland）。一度選べば次回から既定になります。
+#
+
+# 前回のユーザー・セッションを使って選択を省略するか。
+# true にすると起動が速くなりますが、別セッションを選べなくなるので false のまま。
+skip_selection = false
+
+[background]
+# greeter は greeter ユーザーで動くので、$HOME ではなく誰でも読める場所に置きます。
+# setup.sh が ~/Pictures/wallpapers/wall.png をここへコピーします。
+path = "/usr/share/backgrounds/hypr/wall.png"
+fit = "Cover"
+
+[GTK]
+application_prefer_dark_theme = true
+cursor_theme_name = "Adwaita"
+cursor_blink = true
+font_name = "Noto Sans CJK JP 13"
+icon_theme_name = "Papirus-Dark"
+# theme_name は指定しません。存在しないテーマ名を書くと崩れるうえ、
+# 配色は regreet.css で全部上書きしているため不要です。
+
+[commands]
+reboot = ["systemctl", "reboot"]
+poweroff = ["systemctl", "poweroff"]
+
+[appearance]
+greeting_msg = "おかえりなさい"
+
+[widget.clock]
+# このラベルは set_markup で描かれるので pango マークアップが使えます。
+# 時刻を大きく、日付を小さく、1つのラベルに詰めています。
+format = "<span size='40pt' weight='bold'>%H:%M</span>\n<span size='12pt' alpha='75%'>%Y-%m-%d (%a)</span>"
+resolution = "1s"
+label_width = 320
+# timezone と locale は指定せず、システムの設定に従わせます。

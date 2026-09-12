@@ -96,6 +96,42 @@ deploy() {
   fi
 }
 
+# deploy_system <リポジトリ内の相対パス> <配置先> [パーミッション]
+#   /etc 以下に置くので sudo を使います。中身が同じなら触りません。
+deploy_system() {
+  local src="$SCRIPT_DIR/config/$1" dst="$2" mode="${3:-0644}"
+  [[ -e $src ]] || { warn "見つかりません: $src"; return; }
+  if sudo cmp -s "$src" "$dst" 2>/dev/null; then
+    echo "  変更なし: $dst"
+    return
+  fi
+  if sudo test -e "$dst"; then
+    local bak="$dst.bak.$(date +%Y%m%d-%H%M%S)"
+    sudo cp -a "$dst" "$bak"
+    warn "既存を退避: $bak"
+  fi
+  sudo install -Dm "$mode" "$src" "$dst"
+  ok "$dst"
+}
+
+# greetd / ReGreet の設定。greetd が入っているときだけ配置します。
+deploy_greetd() {
+  have greetd || return 0
+  info "ログイン画面の設定を配置します（sudo を使います）"
+  deploy_system greetd/config.toml  /etc/greetd/config.toml
+  deploy_system greetd/regreet.toml /etc/greetd/regreet.toml
+  deploy_system greetd/regreet.css  /etc/greetd/regreet.css
+
+  # 壁紙は greeter ユーザーから読める場所に置く必要があります（$HOME は読めない）
+  local wall="$HOME/Pictures/wallpapers/wall.png"
+  if [[ -f $wall ]]; then
+    sudo install -Dm0644 "$wall" /usr/share/backgrounds/hypr/wall.png
+    ok "/usr/share/backgrounds/hypr/wall.png"
+  else
+    warn "壁紙が無いのでログイン画面は単色になります: $wall"
+  fi
+}
+
 deploy_all() {
   info "設定ファイルを配置します"
   deploy hypr/hyprland.lua   "$HOME/.config/hypr/hyprland.lua"
@@ -115,6 +151,8 @@ deploy_all() {
     mv "$HOME/.config/hypr/hyprland.conf" "$HOME/.config/hypr/hyprland.conf.old"
     warn "古い hyprland.conf を hyprland.conf.old に退避しました（0.55+ では .lua が使われます）。"
   fi
+
+  deploy_greetd
 }
 
 # ---------------------------------------------------------------- 引数
@@ -389,15 +427,51 @@ else
   warn "Hyprland のバージョンを取得できませんでした。"
 fi
 
+# ---------------------------------------------------------------- ログイン画面
+
+info "ログインマネージャ（greetd + ReGreet）を導入します"
+pac greetd greetd-regreet cage
+
+# greetd のパッケージが greeter ユーザーを作ります。無いと greeter が起動しません。
+if ! id greeter &>/dev/null; then
+  warn "greeter ユーザーがありません。greetd の導入に失敗している可能性があります。"
+  NOTES+=("greeter ユーザーが作られていません。sudo pacman -S greetd を single で試してください。")
+fi
+
+# ReGreet の状態・ログ用ディレクトリ（パッケージの tmpfiles 定義を今すぐ適用する）
+sudo systemd-tmpfiles --create >/dev/null 2>&1 || true
+
+# 既に別のログインマネージャが有効だと display-manager.service が競合します。
+CURRENT_DM=""
+if [[ -L /etc/systemd/system/display-manager.service ]]; then
+  CURRENT_DM=$(basename "$(readlink -f /etc/systemd/system/display-manager.service)")
+fi
+
+if [[ -n $CURRENT_DM && $CURRENT_DM != greetd.service ]]; then
+  warn "既に $CURRENT_DM が有効です。greetd と同時には使えません。"
+  if ask "$CURRENT_DM を無効化して greetd に切り替えますか？"; then
+    sudo systemctl disable "$CURRENT_DM" >/dev/null 2>&1 || true
+    CURRENT_DM=""
+  else
+    NOTES+=("$CURRENT_DM を使い続けます。greetd は有効化していません。")
+  fi
+fi
+
+if [[ -z $CURRENT_DM || $CURRENT_DM == greetd.service ]]; then
+  sudo systemctl enable greetd.service >/dev/null 2>&1 \
+    && ok "greetd を有効化しました（次回起動からログイン画面が出ます）" \
+    || warn "greetd の有効化に失敗しました。"
+fi
+
 # ---------------------------------------------------------------- フォント / IME
 
 info "フォントと日本語入力を導入します"
 pac \
   noto-fonts noto-fonts-cjk noto-fonts-emoji \
   ttf-jetbrains-mono-nerd ttf-firacode-nerd \
-  fcitx5 fcitx5-configtool fcitx5-gtk fcitx5-qt fcitx5-mozc
+  fcitx5 fcitx5-configtool fcitx5-gtk fcitx5-qt fcitx5-mozc \
+  papirus-icon-theme
 
-pac_opt papirus-icon-theme
 
 # 入力メソッドの環境変数は hyprland.lua の hl.env に集約しています。
 # （/etc/environment.d/ は Hyprland を TTY から起動した場合に効きません）
@@ -451,6 +525,29 @@ if have hyprlock; then
   ok "hyprlock の設定を配置済み（ロックできないときは 'hyprlock -v' でログを見てください）。"
 fi
 
+# ログイン画面の設定が壊れていると、次回起動でグラフィカルログインできません。
+# TOML として読めるかだけでも確認しておきます。
+if have greetd; then
+  for f in /etc/greetd/config.toml /etc/greetd/regreet.toml; do
+    if sudo test -f "$f"; then
+      if sudo cat "$f" | python3 -c 'import sys,tomllib; tomllib.loads(sys.stdin.read())' 2>/dev/null; then
+        ok "$f は TOML として妥当です。"
+      else
+        warn "$f の TOML が壊れています。ログイン画面が出なくなります。"
+        NOTES+=("$f を直すか、sudo systemctl disable greetd で一旦戻してください。")
+      fi
+    else
+      warn "$f がありません。"
+    fi
+  done
+
+  if sudo test -f /usr/share/backgrounds/hypr/wall.png; then
+    ok "ログイン画面の壁紙を配置済み。"
+  else
+    warn "ログイン画面の壁紙がありません（背景は単色になります）。"
+  fi
+fi
+
 # ---------------------------------------------------------------- 仕上げ
 
 echo
@@ -487,12 +584,21 @@ cat <<'OUTRO'
   5. C-state の落ち込み（バッテリー持ちの主因になりうる）
      sudo powertop     # Idle Stats で C8/C9/C10 に時間が入っていれば正常
 
-  起動は TTY から:
+  再起動すると ReGreet のログイン画面が出ます。
+  セッションは "Hyprland" を選んでください（一度選べば次回から既定になります）。
+
+  ログイン画面を使わず TTY から起動したい場合は:
 
      start-hyprland
 
   ※ 0.53 以降は `Hyprland` を直接叩くのではなく `start-hyprland` が正式な入口です。
      直接叩くと misc の watchdog 警告が出ます。
+
+  ログイン画面が出ない / 操作できないときの戻し方:
+
+     Ctrl+Alt+F2 で TTY に切り替えてログインし、
+     sudo systemctl disable --now greetd
+     journalctl -b -u greetd     # 原因はここに出ます
 
   設定でエラーが出たら:
 

@@ -1,0 +1,24 @@
+#
+# greetd — ログインマネージャ本体の設定
+#   /etc/greetd/config.toml に置かれます
+#
+# greeter は cage（Wayland のキオスク用コンポジタ）の中で ReGreet を動かします。
+# Hyprland 自体を greeter のコンポジタにすることもできますが、Hyprland の更新で
+# 起動しなくなるとグラフィカルログインごと巻き添えになるので、ここは cage にして
+# あります。見た目は ReGreet 側（regreet.toml / regreet.css）で作り込んでいるので
+# コンポジタの差は出ません。
+#
+# cage の引数:
+#   -s      VT 切り替えを許可する。締め出され防止のため必ず付ける
+#   -mlast  最後に接続されたモニタだけを使う（ReGreet は単一モニタ向け）
+#   -d      クライアント側装飾を出さない
+#
+# dbus-run-session は必須ではありませんが、起動が数秒遅れる症状の回避に効きます。
+#
+
+[terminal]
+vt = 1
+
+[default_session]
+command = "dbus-run-session cage -s -mlast -d -- regreet"
+user = "greeter"

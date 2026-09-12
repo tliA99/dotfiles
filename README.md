@@ -13,6 +13,7 @@ EndeavourOS を入れた X1 Carbon Gen 7 を、Hyprland のデスクトップに
 | `config/wofi/` | ランチャ（設定 + CSS） |
 | `config/foot/` | ターミナル |
 | `config/swaync/` | 通知センター（設定 + CSS） |
+| `config/greetd/` | ログイン画面（greetd + ReGreet の設定 + CSS） |
 
 配色は Tokyo Night Storm で全部揃えてあります。
 
@@ -70,7 +71,8 @@ chmod +x setup.sh
 ./setup.sh
 ```
 
-設定を直したあとの再適用は、パッケージ導入を飛ばせます（sudo も不要です）。
+設定を直したあとの再適用は、パッケージ導入を飛ばせます。
+`/etc/greetd/` 以下を更新するときだけ sudo を聞かれます。
 
 ```bash
 ./setup.sh --configs-only          # config/ 以下を配置し直すだけ
@@ -87,24 +89,75 @@ chmod +x setup.sh
 3. Intel UHD 620 向けグラフィックスタック（VA-API は `iHD`）
 4. TLP による電源管理（`power-profiles-daemon` があれば外す）と zram
 5. Hyprland 一式、フォント、fcitx5 + Mozc
-6. 壁紙の生成と、`config/` 以下の設定配置
+6. ログインマネージャ（greetd + ReGreet）の導入と有効化
+7. 壁紙の生成と、`config/` 以下の設定配置
 
 途中でパッケージが 1 つ見つからなくても止まりません。入らなかったものは最後にまとめて表示します。
 
 ---
 
-## 2. 起動
+## 2. ログイン画面と起動
+
+ログインマネージャは **greetd + [ReGreet](https://github.com/rharish101/ReGreet)** です。
+どちらも Arch の `extra` にあるので AUR は要りません。GTK4 製で Wayland ネイティブ、
+CSS で自由に見た目を作れるので、Tokyo Night のまま他の設定と揃えてあります。
+
+`setup.sh` が `greetd.service` を有効化するので、**再起動すればログイン画面が出ます**。
+セッションの一覧で `Hyprland` を選べば、そのまま Hyprland が起動します
+（一度選べば次回から既定になります）。ここが「Hyprland の自動起動」にあたります。
+
+| ファイル | 置き場所 | 役割 |
+| --- | --- | --- |
+| `config/greetd/config.toml` | `/etc/greetd/config.toml` | greetd 本体。cage の中で ReGreet を動かす |
+| `config/greetd/regreet.toml` | `/etc/greetd/regreet.toml` | 壁紙・時計・フォントなど |
+| `config/greetd/regreet.css` | `/etc/greetd/regreet.css` | 配色（Tokyo Night Storm） |
+
+greeter のコンポジタには **cage** を使っています。Hyprland 自体を使うこともできて
+ReGreet の README にも例がありますが、Hyprland の更新で起動しなくなるとグラフィカル
+ログインごと巻き添えになります。見た目は ReGreet 側で作り込んでいてコンポジタの差は
+出ないので、壊れにくい cage にしてあります。
+
+Hyprland を greeter にしたい場合は `/etc/greetd/config.toml` の `command` を
+`dbus-run-session start-hyprland -- -c /etc/greetd/hyprland.lua` に変え、その Lua で
+`hl.on("hyprland.start", ...)` から `regreet` を起動してください。
+
+### 自動ログインにしたい場合
+
+既定ではパスワードを求めます。持ち出すノートなので、盗難時にディスクの中身が
+そのまま見えてしまう状態は避ける想定です。
+
+不要なら `/etc/greetd/config.toml` に次を足してください。ログイン画面を経由せず
+そのまま Hyprland が立ち上がります（`YOUR_USER` は自分のユーザー名に）。
+
+```toml
+[initial_session]
+command = "start-hyprland"
+user = "YOUR_USER"
+```
+
+なお自動ログインにしても、hypridle → hyprlock による**復帰時のロックは効いたまま**です。
+
+### ログイン画面を使わない場合
+
+`sudo systemctl disable --now greetd` で止めて、TTY から直接起動できます。
 
 ```bash
 start-hyprland
 ```
 
-TTY から叩きます。ログインマネージャは入れていません。
-
-自動起動させたい場合は `~/.bash_profile`（zsh なら `~/.zprofile`）に:
+TTY ログイン時に自動で起動させたいなら `~/.bash_profile`（zsh なら `~/.zprofile`）に:
 
 ```bash
 [[ -z $WAYLAND_DISPLAY && $XDG_VTNR -eq 1 ]] && exec start-hyprland
+```
+
+### ログイン画面が出なくなったら
+
+`Ctrl+Alt+F2` で TTY に切り替えられます。ログインして:
+
+```bash
+sudo systemctl disable --now greetd
+journalctl -b -u greetd          # 原因はここに出ます
 ```
 
 ---
@@ -166,6 +219,8 @@ tail -f $XDG_RUNTIME_DIR/hypr/*/hyprland.log
 | アイコンが豆腐 | Nerd Font（`ttf-jetbrains-mono-nerd`）が入っているか |
 | 日本語が豆腐 | `noto-fonts-cjk` が入っているか |
 | foot が `invalid section name colors` | foot 1.26 で `[colors]` は廃止。`[colors-dark]` / `[colors-light]` に分かれました |
+| ログイン画面が真っ黒 / 出ない | `journalctl -b -u greetd`。`Ctrl+Alt+F2` で TTY に逃げられます |
+| ログイン画面の壁紙が出ない | `/usr/share/backgrounds/hypr/wall.png` が無い。greeter は `$HOME` を読めません |
 | 日本語入力が出ない | `fcitx5 -d` が起動しているか。XWayland アプリは `XMODIFIERS=@im=fcitx` が必要 |
 
 デバイス名（トラックポイントや Lid Switch）が合っているかは:
