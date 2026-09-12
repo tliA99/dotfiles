@@ -1,0 +1,66 @@
+/* wofi — Tokyo Night Storm */
+
+* {
+  font-family: "JetBrainsMono Nerd Font", "Noto Sans CJK JP", sans-serif;
+  font-size: 14px;
+}
+
+window {
+  background-color: rgba(26, 27, 38, 0.82);
+  border: 1px solid rgba(122, 162, 247, 0.35);
+  border-radius: 16px;
+  color: #c0caf5;
+}
+
+#outer-box {
+  padding: 16px;
+}
+
+#input {
+  background-color: rgba(41, 46, 66, 0.9);
+  border: 1px solid rgba(122, 162, 247, 0.30);
+  border-radius: 10px;
+  color: #c0caf5;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+}
+
+#input:focus {
+  border-color: #7aa2f7;
+}
+
+#input image {
+  color: #565f89;
+}
+
+#scroll {
+  margin: 0;
+}
+
+#inner-box {
+  background-color: transparent;
+}
+
+#entry {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background-color: transparent;
+}
+
+#entry:selected {
+  background: linear-gradient(135deg, rgba(122, 162, 247, 0.28), rgba(187, 154, 247, 0.28));
+  border: 1px solid rgba(122, 162, 247, 0.55);
+}
+
+#text {
+  color: #c0caf5;
+  margin-left: 10px;
+}
+
+#text:selected {
+  color: #ffffff;
+}
+
+#unselected {
+  color: #a9b1d6;
+}

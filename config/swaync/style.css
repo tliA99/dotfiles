@@ -1,0 +1,151 @@
+/* swaync — Tokyo Night Storm */
+
+@define-color bg        rgba(26, 27, 38, 0.86);
+@define-color card      rgba(41, 46, 66, 0.92);
+@define-color fg        #c0caf5;
+@define-color muted     #565f89;
+@define-color blue      #7aa2f7;
+@define-color magenta   #bb9af7;
+@define-color red       #f7768e;
+
+* {
+  font-family: "JetBrainsMono Nerd Font", "Noto Sans CJK JP", sans-serif;
+  font-size: 13px;
+}
+
+.notification-row {
+  outline: none;
+  background: transparent;
+}
+
+.notification {
+  border-radius: 14px;
+  margin: 6px 10px;
+  padding: 0;
+  background: @card;
+  border: 1px solid rgba(122, 162, 247, 0.22);
+}
+
+.notification-content {
+  padding: 12px;
+  color: @fg;
+}
+
+.notification.critical {
+  border-color: @red;
+}
+
+.summary {
+  font-size: 14px;
+  font-weight: 600;
+  color: @fg;
+}
+
+.time {
+  font-size: 11px;
+  color: @muted;
+}
+
+.body {
+  color: #a9b1d6;
+}
+
+.close-button {
+  background: transparent;
+  color: @muted;
+  border-radius: 8px;
+  margin: 6px;
+  padding: 2px 6px;
+}
+
+.close-button:hover {
+  background: @red;
+  color: #1a1b26;
+}
+
+.notification-action,
+.notification-default-action {
+  background: transparent;
+  border: none;
+  color: @fg;
+}
+
+.notification-action:hover,
+.notification-default-action:hover {
+  background: rgba(122, 162, 247, 0.18);
+}
+
+/* ---- コントロールセンター ---- */
+
+.control-center {
+  background: @bg;
+  border: 1px solid rgba(122, 162, 247, 0.28);
+  border-radius: 16px;
+  padding: 12px;
+}
+
+.control-center-list {
+  background: transparent;
+}
+
+.widget-title {
+  color: @fg;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 6px 8px 10px 8px;
+}
+
+.widget-title > button {
+  background: rgba(122, 162, 247, 0.16);
+  border: 1px solid rgba(122, 162, 247, 0.32);
+  border-radius: 10px;
+  color: @fg;
+  padding: 4px 12px;
+  font-size: 12px;
+}
+
+.widget-title > button:hover {
+  background: @blue;
+  color: #1a1b26;
+}
+
+.widget-dnd {
+  color: @fg;
+  margin: 4px 8px 10px 8px;
+  font-size: 13px;
+}
+
+.widget-dnd > switch {
+  background: @card;
+  border-radius: 999px;
+  border: 1px solid rgba(122, 162, 247, 0.3);
+}
+
+.widget-dnd > switch:checked {
+  background: @magenta;
+}
+
+.widget-mpris,
+.widget-volume,
+.widget-backlight {
+  background: @card;
+  border-radius: 12px;
+  padding: 10px;
+  margin: 6px 8px;
+  color: @fg;
+}
+
+trough {
+  background: rgba(86, 95, 137, 0.5);
+  border-radius: 999px;
+}
+
+highlight {
+  background: linear-gradient(90deg, @blue, @magenta);
+  border-radius: 999px;
+}
+
+slider {
+  background: @fg;
+  border-radius: 999px;
+}
