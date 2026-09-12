@@ -1,0 +1,166 @@
+/*
+ * waybar — Tokyo Night Storm
+ *
+ * hyprland.lua 側で layer_rule により blur をかけているので、
+ * 背景は半透明にしてあります。blur を切った場合は
+ * @define-color bg の alpha を上げてください。
+ */
+
+@define-color bg        rgba(26, 27, 38, 0.72);
+@define-color bg_solid  #1a1b26;
+@define-color surface   rgba(41, 46, 66, 0.85);
+@define-color fg        #c0caf5;
+@define-color muted     #565f89;
+@define-color blue      #7aa2f7;
+@define-color cyan      #7dcfff;
+@define-color green     #9ece6a;
+@define-color yellow    #e0af68;
+@define-color red       #f7768e;
+@define-color magenta   #bb9af7;
+
+* {
+  font-family: "JetBrainsMono Nerd Font", "Noto Sans CJK JP", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  border-radius: 0;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+}
+
+window#waybar {
+  background: transparent;
+  color: @fg;
+}
+
+/* 3 ブロック（左/中央/右）をカードとして浮かせる */
+.modules-left,
+.modules-center,
+.modules-right {
+  background: @bg;
+  border: 1px solid rgba(122, 162, 247, 0.16);
+  border-radius: 12px;
+  padding: 0 6px;
+}
+
+tooltip {
+  background: @bg_solid;
+  border: 1px solid @blue;
+  border-radius: 10px;
+  color: @fg;
+}
+tooltip label {
+  padding: 4px;
+  color: @fg;
+}
+
+/* ---------------------------------------------------------- ワークスペース */
+
+#workspaces {
+  padding: 0 2px;
+}
+
+#workspaces button {
+  color: @muted;
+  padding: 0 8px;
+  margin: 4px 2px;
+  border-radius: 8px;
+  background: transparent;
+  transition: all 180ms cubic-bezier(0.2, 1, 0.3, 1);
+}
+
+#workspaces button:hover {
+  color: @fg;
+  background: @surface;
+  box-shadow: none;   /* GTK のデフォルト inset を消す */
+  text-shadow: none;
+}
+
+/* 新しい waybar は .active。古い設定に多い .focused も一応残す */
+#workspaces button.active,
+#workspaces button.focused {
+  color: @bg_solid;
+  background: linear-gradient(135deg, @blue, @magenta);
+  padding: 0 12px;
+}
+
+#workspaces button.urgent {
+  color: @bg_solid;
+  background: @red;
+}
+
+#submap {
+  color: @yellow;
+  padding: 0 10px;
+}
+
+/* ---------------------------------------------------------- 中央 */
+
+#window {
+  color: @fg;
+  padding: 0 14px;
+  margin: 4px 0;
+}
+
+window#waybar.empty .modules-center {
+  background: transparent;
+  border-color: transparent;
+}
+
+/* ---------------------------------------------------------- 右 */
+
+#tray,
+#custom-notification,
+#idle_inhibitor,
+#pulseaudio,
+#backlight,
+#cpu,
+#memory,
+#temperature,
+#network,
+#bluetooth,
+#battery,
+#clock {
+  padding: 0 9px;
+  margin: 4px 1px;
+  border-radius: 8px;
+  background: transparent;
+}
+
+#custom-notification { color: @magenta; }
+#idle_inhibitor      { color: @muted; }
+#idle_inhibitor.activated { color: @yellow; }
+#pulseaudio          { color: @cyan; }
+#pulseaudio.muted    { color: @muted; }
+#backlight           { color: @yellow; }
+#cpu                 { color: @green; }
+#memory              { color: @magenta; }
+#temperature         { color: @cyan; }
+#network             { color: @blue; }
+#network.disconnected { color: @red; }
+#bluetooth           { color: @blue; }
+#bluetooth.disabled  { color: @muted; }
+
+#temperature.critical {
+  color: @bg_solid;
+  background: @red;
+}
+
+#battery { color: @green; }
+#battery.charging,
+#battery.plugged { color: @cyan; }
+#battery.warning:not(.charging) { color: @yellow; }
+#battery.critical:not(.charging) {
+  color: @bg_solid;
+  background: @red;
+}
+
+#clock {
+  color: @fg;
+  font-weight: 600;
+  padding: 0 12px;
+}
+
+#tray > .passive { -gtk-icon-effect: dim; }
+#tray > .needs-attention { -gtk-icon-effect: highlight; }
