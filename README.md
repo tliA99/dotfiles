@@ -70,6 +70,16 @@ chmod +x setup.sh
 ./setup.sh
 ```
 
+設定を直したあとの再適用は、パッケージ導入を飛ばせます（sudo も不要です）。
+
+```bash
+./setup.sh --configs-only          # config/ 以下を配置し直すだけ
+./setup.sh --configs-only --link   # コピーではなくリポジトリへのシンボリックリンク
+```
+
+`--link` にしておくと、リポジトリを直接編集した内容がそのまま反映されるので、
+詰めていく段階ではこちらが楽です。
+
 スクリプトがやること:
 
 1. pacman の設定調整とミラーの日本優先化（EndeavourOS 独自リポジトリのミラーも含む）
@@ -155,6 +165,7 @@ tail -f $XDG_RUNTIME_DIR/hypr/*/hyprland.log
 | バーは出るがワークスペースが空 | モジュール名が `sway/workspaces` になっていないか（`hyprland/workspaces` が正解） |
 | アイコンが豆腐 | Nerd Font（`ttf-jetbrains-mono-nerd`）が入っているか |
 | 日本語が豆腐 | `noto-fonts-cjk` が入っているか |
+| foot が `invalid section name colors` | foot 1.26 で `[colors]` は廃止。`[colors-dark]` / `[colors-light]` に分かれました |
 | 日本語入力が出ない | `fcitx5 -d` が起動しているか。XWayland アプリは `XMODIFIERS=@im=fcitx` が必要 |
 
 デバイス名（トラックポイントや Lid Switch）が合っているかは:

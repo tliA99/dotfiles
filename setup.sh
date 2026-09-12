@@ -57,6 +57,101 @@ pac_opt() {
 
 have() { command -v "$1" >/dev/null 2>&1; }
 
+# deploy <リポジトリ内の相対パス> <配置先>
+#   - 中身が同じなら何もしない（再実行しても .bak が増えない）
+#   - シンボリックリンクなら張り替える（cp が実体を上書きしてしまうのを防ぐ）
+deploy() {
+  local src="$SCRIPT_DIR/config/$1" dst="$2"
+  [[ -e $src ]] || { warn "見つかりません: $src"; return; }
+  mkdir -p "$(dirname "$dst")"
+
+  if [[ -L $dst ]]; then
+    # 既にリンク。張り直すだけなら黙って通す（cp が実体を上書きするのを防ぐ）
+    if [[ ${LINK_CONFIGS:-false} == true && $(readlink -f "$dst") == "$(readlink -f "$src")" ]]; then
+      echo "  変更なし: $dst -> $src"
+      return
+    fi
+    rm -f "$dst"
+  elif [[ -e $dst ]]; then
+    # 内容が同じなら触らない。ただし --link のときはリンクへ張り替える必要がある
+    if [[ ${LINK_CONFIGS:-false} != true ]] && cmp -s "$src" "$dst"; then
+      echo "  変更なし: $dst"
+      return
+    fi
+    if cmp -s "$src" "$dst"; then
+      rm -f "$dst"
+    else
+      local bak="$dst.bak.$(date +%Y%m%d-%H%M%S)"
+      mv "$dst" "$bak"
+      warn "既存を退避: $bak"
+    fi
+  fi
+
+  if [[ ${LINK_CONFIGS:-false} == true ]]; then
+    ln -s "$src" "$dst"
+    ok "$dst -> $src"
+  else
+    cp "$src" "$dst"
+    ok "$dst"
+  fi
+}
+
+deploy_all() {
+  info "設定ファイルを配置します"
+  deploy hypr/hyprland.lua   "$HOME/.config/hypr/hyprland.lua"
+  deploy hypr/hypridle.conf  "$HOME/.config/hypr/hypridle.conf"
+  deploy hypr/hyprlock.conf  "$HOME/.config/hypr/hyprlock.conf"
+  deploy hypr/hyprpaper.conf "$HOME/.config/hypr/hyprpaper.conf"
+  deploy waybar/config.jsonc "$HOME/.config/waybar/config.jsonc"
+  deploy waybar/style.css    "$HOME/.config/waybar/style.css"
+  deploy wofi/config         "$HOME/.config/wofi/config"
+  deploy wofi/style.css      "$HOME/.config/wofi/style.css"
+  deploy foot/foot.ini       "$HOME/.config/foot/foot.ini"
+  deploy swaync/config.json  "$HOME/.config/swaync/config.json"
+  deploy swaync/style.css    "$HOME/.config/swaync/style.css"
+
+  # 0.54 以前の設定が残っていると紛らわしいので退避する
+  if [[ -f "$HOME/.config/hypr/hyprland.conf" ]]; then
+    mv "$HOME/.config/hypr/hyprland.conf" "$HOME/.config/hypr/hyprland.conf.old"
+    warn "古い hyprland.conf を hyprland.conf.old に退避しました（0.55+ では .lua が使われます）。"
+  fi
+}
+
+# ---------------------------------------------------------------- 引数
+
+CONFIGS_ONLY=false
+LINK_CONFIGS=false
+for arg in "$@"; do
+  case "$arg" in
+    --configs-only) CONFIGS_ONLY=true ;;
+    --link)         LINK_CONFIGS=true ;;
+    -h|--help)
+      cat <<'USAGE'
+使い方: ./setup.sh [オプション]
+
+  --configs-only  パッケージ導入などは行わず、config/ 以下を再配置するだけ
+  --link          コピーではなくリポジトリへのシンボリックリンクを張る
+                  （リポジトリを直接編集すればそのまま反映される）
+  -h, --help      このヘルプ
+USAGE
+      exit 0 ;;
+    *) echo "不明なオプション: $arg （--help を参照）" >&2; exit 1 ;;
+  esac
+done
+
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+
+# --configs-only なら設定の再配置だけして終わる（設定を直したときの再適用用）
+if [[ ${CONFIGS_ONLY:-false} == true ]]; then
+  deploy_all
+  echo
+  info "設定を再配置しました。反映するには:"
+  echo "    hyprctl reload                     # Hyprland"
+  echo "    pkill -SIGUSR2 waybar || waybar &  # waybar"
+  echo "    foot は起動し直せば反映されます"
+  exit 0
+fi
+
 # ---------------------------------------------------------------- 事前チェック
 
 [[ $EUID -eq 0 ]] && die "root では実行しないでください。"
@@ -82,7 +177,6 @@ sudo -v || die "sudo に失敗しました。"
 SUDO_KEEPALIVE=$!
 trap 'kill $SUDO_KEEPALIVE 2>/dev/null || true' EXIT
 
-SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 # ---------------------------------------------------------------- pacman 設定
 
@@ -332,38 +426,7 @@ fi
 
 # ---------------------------------------------------------------- 設定ファイル配置
 
-deploy() {
-  # deploy <リポジトリ内の相対パス> <配置先>
-  local src="$SCRIPT_DIR/config/$1" dst="$2"
-  [[ -e $src ]] || { warn "見つかりません: $src"; return; }
-  mkdir -p "$(dirname "$dst")"
-  if [[ -e $dst && ! -L $dst ]]; then
-    local bak="$dst.bak.$(date +%Y%m%d-%H%M%S)"
-    mv "$dst" "$bak"
-    warn "既存を退避: $bak"
-  fi
-  cp -r "$src" "$dst"
-  ok "$dst"
-}
-
-info "設定ファイルを配置します"
-deploy hypr/hyprland.lua   "$HOME/.config/hypr/hyprland.lua"
-deploy hypr/hypridle.conf  "$HOME/.config/hypr/hypridle.conf"
-deploy hypr/hyprlock.conf  "$HOME/.config/hypr/hyprlock.conf"
-deploy hypr/hyprpaper.conf "$HOME/.config/hypr/hyprpaper.conf"
-deploy waybar/config.jsonc "$HOME/.config/waybar/config.jsonc"
-deploy waybar/style.css    "$HOME/.config/waybar/style.css"
-deploy wofi/config         "$HOME/.config/wofi/config"
-deploy wofi/style.css      "$HOME/.config/wofi/style.css"
-deploy foot/foot.ini       "$HOME/.config/foot/foot.ini"
-deploy swaync/config.json  "$HOME/.config/swaync/config.json"
-deploy swaync/style.css    "$HOME/.config/swaync/style.css"
-
-# 0.54 以前の設定が残っていると紛らわしいので退避する
-if [[ -f "$HOME/.config/hypr/hyprland.conf" ]]; then
-  mv "$HOME/.config/hypr/hyprland.conf" "$HOME/.config/hypr/hyprland.conf.old"
-  warn "古い hyprland.conf を hyprland.conf.old に退避しました（0.55+ では .lua が使われます）。"
-fi
+deploy_all
 
 # ---------------------------------------------------------------- 検証
 
