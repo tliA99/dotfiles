@@ -151,8 +151,9 @@ hl.config({
 
     animations = { enabled = true },
 
+    -- pseudotile というグローバル設定は廃止されました。
+    -- pseudo はウィンドウ単位の操作になり、SUPER + P のバインドがそれです。
     dwindle = {
-        pseudotile     = true,
         preserve_split = true,
     },
 
@@ -183,7 +184,9 @@ hl.config({
 hl.curve("smooth", { type = "bezier", points = { { 0.05, 0.9 }, { 0.1, 1.0 } } })
 hl.curve("snappy", { type = "bezier", points = { { 0.2, 1.0 }, { 0.3, 1.0 } } })
 hl.curve("linear", { type = "bezier", points = { { 0, 0 }, { 1, 1 } } })
-hl.curve("bounce", { type = "spring", mass = 1, stiffness = 250, damping = 22 })
+-- 減衰のキーは dampening。damping は新しい版で足された別名なので、
+-- 古い版でも通る dampening を使います。
+hl.curve("bounce", { type = "spring", mass = 1, stiffness = 250, dampening = 22 })
 
 hl.animation({ leaf = "windowsIn",   enabled = true, speed = 4.0, spring = "bounce", style = "popin 85%" })
 hl.animation({ leaf = "windowsOut",  enabled = true, speed = 2.5, bezier = "smooth", style = "popin 85%" })
@@ -212,9 +215,12 @@ hl.config({
         touchpad = {
             natural_scroll       = true,
             disable_while_typing = true,
-            tap_to_click         = true,
             scroll_factor        = 0.5,
             clickfinger_behavior = true,
+            -- タップ操作は既定で有効なので指定していません。無効にしたい場合は
+            -- キー名がハイフン区切りなので Lua では角括弧で書く必要があります:
+            --   ["tap-to-click"] = false,
+            --   ["tap-and-drag"] = false,
         },
     },
 })
