@@ -223,6 +223,8 @@ tail -f $XDG_RUNTIME_DIR/hypr/*/hyprland.log
 | Wi-Fi / 電源メニューが出ない | `~/.config/scripts/*.sh` に実行権限があるか（`./setup.sh --configs-only` で付きます）。端末から直接叩くとエラーが見えます |
 | Wi-Fi メニューに SSID が出ない | `nmcli device wifi list` が通るか。NetworkManager が止まっていると空になります |
 | Birdtray の色が未読で変わらない | 設定画面で監視フォルダを選べているか。選んだあとに `birdtray-theme.sh` を実行し直してください |
+| Birdtray がアカウントを自動検出しない | プロファイルが `~/.config/thunderbird/` にあるため。`ln -s ~/.config/thunderbird ~/.thunderbird` |
+| Birdtray がトレイに出ない（60 秒後に `system tray cannot be controlled`） | waybar が落ちていてトレイの受け皿（`org.kde.StatusNotifierWatcher`）が無い。waybar を先に起動してから `birdtray &` |
 | 日本語が豆腐 | `noto-fonts-cjk` が入っているか |
 | foot が `invalid section name colors` | foot 1.26 で `[colors]` は廃止。`[colors-dark]` / `[colors-light]` に分かれました |
 | ログイン画面が真っ黒 / 出ない | `journalctl -b -u greetd`。`Ctrl+Alt+F2` で TTY に逃げられます |
@@ -315,10 +317,23 @@ Thunderbird の未読を出したい場合は **Birdtray** をトレイに置き
 
 ```bash
 sudo pacman -S thunderbird     # 未導入なら
+thunderbird                    # 先にアカウントを設定し、受信トレイを一度開く
 ./setup.sh                     # Birdtray を AUR から入れる（Thunderbird があるときだけ）
 birdtray                       # 設定画面で監視するフォルダ（アカウント）を選ぶ
 ~/.config/scripts/birdtray-theme.sh   # アイコンを Tokyo Night にし、数字を消す
 ```
+
+設定画面の **Accounts → Add** で、受信トレイの `.msf` を選びます。選ぶのは受信トレイだけで
+十分です（アーカイブや削除済みアイテムまで入れると数が合わなくなります）。`.msf` は
+Thunderbird がそのフォルダを一度同期したあとに作られます。フォルダ名は日本語環境だと
+`受信トレイ.msf`、Exchange / Office365 のアカウントなら
+`Mail/outlook.office365.com/受信トレイ.msf` のようになります。
+
+> **Thunderbird 155 以降はプロファイルが `~/.config/thunderbird/` に移っています**（`~/.thunderbird` ではありません）。
+> Birdtray は従来の `~/.thunderbird` を見に行くので、そのままだとアカウントを自動検出できません。
+> `setup.sh` は `~/.thunderbird` が無ければ `~/.config/thunderbird` へのシンボリックリンクを張ります。
+> 手動で張る場合は `ln -s ~/.config/thunderbird ~/.thunderbird` です。
+> リンクを張らずに、Add のファイル選択ダイアログへ実パスを直接入力しても構いません。
 
 `birdtray-theme.sh` は設定ファイル（`~/.config/birdtray-config.json`）を上書きせず、
 必要なキーだけ差し替えます。選んだフォルダや他の設定はそのまま残り、実行前の内容は

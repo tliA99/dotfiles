@@ -436,6 +436,15 @@ aur_opt hyprland-qtutils hyprland-guiutils hyprshutdown hyprlauncher
 if have thunderbird; then
   info "Thunderbird があるので Birdtray（未読をトレイに表示）も入れます"
   aur_opt birdtray
+
+  # Thunderbird 155 以降はプロファイルが ~/.config/thunderbird に移っています。
+  # Birdtray は従来の ~/.thunderbird しか見ないので、リンクを張って検出させます。
+  # （同じディレクトリを指すだけなので Thunderbird 側の動作は変わりません）
+  if [[ -d "$HOME/.config/thunderbird" && ! -e "$HOME/.thunderbird" ]]; then
+    ln -s "$HOME/.config/thunderbird" "$HOME/.thunderbird"
+    ok "~/.thunderbird -> ~/.config/thunderbird（Birdtray のプロファイル検出用）"
+  fi
+
   if have birdtray; then
     NOTES+=("Birdtray は一度起動して監視するフォルダを選んでから、~/.config/scripts/birdtray-theme.sh を実行してください（未読数の数字を消して色だけにします）。")
   fi
