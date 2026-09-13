@@ -13,7 +13,7 @@ EndeavourOS を入れた X1 Carbon Gen 7 を、Hyprland のデスクトップに
 | `config/wofi/` | ランチャ（設定 + CSS） |
 | `config/foot/` | ターミナル |
 | `config/swaync/` | 通知センター（設定 + CSS） |
-| `config/scripts/` | waybar / キーバインドから呼ぶスクリプト（Wi-Fi メニュー・電源メニュー） |
+| `config/scripts/` | waybar / キーバインドから呼ぶスクリプト（Wi-Fi メニュー・電源メニュー・Birdtray の配色） |
 | `config/greetd/` | ログイン画面（greetd + ReGreet の設定 + CSS） |
 
 配色は Tokyo Night Storm で全部揃えてあります。
@@ -222,6 +222,7 @@ tail -f $XDG_RUNTIME_DIR/hypr/*/hyprland.log
 | アイコンが豆腐 | Nerd Font（`ttf-jetbrains-mono-nerd`）が入っているか |
 | Wi-Fi / 電源メニューが出ない | `~/.config/scripts/*.sh` に実行権限があるか（`./setup.sh --configs-only` で付きます）。端末から直接叩くとエラーが見えます |
 | Wi-Fi メニューに SSID が出ない | `nmcli device wifi list` が通るか。NetworkManager が止まっていると空になります |
+| Birdtray の色が未読で変わらない | 設定画面で監視フォルダを選べているか。選んだあとに `birdtray-theme.sh` を実行し直してください |
 | 日本語が豆腐 | `noto-fonts-cjk` が入っているか |
 | foot が `invalid section name colors` | foot 1.26 で `[colors]` は廃止。`[colors-dark]` / `[colors-light]` に分かれました |
 | ログイン画面が真っ黒 / 出ない | `journalctl -b -u greetd`。`Ctrl+Alt+F2` で TTY に逃げられます |
@@ -240,7 +241,7 @@ hyprctl layers      # レイヤールールの namespace 確認用
 
 ---
 
-## 5. バーの中身（Wi-Fi と電源）
+## 5. バーの中身（Wi-Fi・電源・メール）
 
 ### 何をどこで操作するか
 
@@ -254,6 +255,7 @@ waybar 側の `network` / `bluetooth` モジュールは置いていません。
 | Bluetooth の接続 | トレイの Bluetooth アイコン（`blueman`） |
 | 電源操作 | バー右端の 󰐥、または `SUPER + X` |
 | 細かいネットワーク設定（固定 IP など） | `nmtui` か `nm-connection-editor` |
+| Thunderbird の未読を見る | トレイの封筒アイコン（Birdtray / 任意・下記） |
 
 バーに戻したい場合は、`waybar/config.jsonc` の `modules-right` に `"network"` / `"bluetooth"` を足し、
 `hyprland.lua` の `nm-applet` / `blueman-applet` の自動起動を外してください（逆にしないと二重になります）。
@@ -290,6 +292,50 @@ CPU とメモリは混んでくると色が変わります（70% / 80% で黄、
 ```bash
 sudo systemctl enable --now NetworkManager   # 止まっていたら
 ```
+
+### Thunderbird の未読（トレイ / 任意）
+
+Thunderbird の未読を出したい場合は **Birdtray** をトレイに置きます。Thunderbird の
+フォルダ要約ファイル（`.msf`）を直接読むので、拡張機能は要りません。waybar 側は
+トレイに出るだけなので設定の変更は不要です。アイコンをクリックすると Thunderbird の
+ウィンドウを隠す / 戻すができます。
+
+既定では未読数を数字でアイコンに描きますが、このリポジトリでは**数字を出さず色だけ**に
+しています（バーの他のモジュールと揃えるため）。
+
+| 状態 | 見え方 |
+| --- | --- |
+| 未読なし | 灰色の封筒（`#565f89`） |
+| 未読あり | 青の封筒（`#7aa2f7`） |
+
+手順は 4 段階です。監視するフォルダの指定は Birdtray の設定画面でしか行えないため、
+ここだけ手作業になります。
+
+```bash
+sudo pacman -S thunderbird     # 未導入なら
+./setup.sh                     # Birdtray を AUR から入れる（Thunderbird があるときだけ）
+birdtray                       # 設定画面で監視するフォルダ（アカウント）を選ぶ
+~/.config/scripts/birdtray-theme.sh   # アイコンを Tokyo Night にし、数字を消す
+```
+
+`birdtray-theme.sh` は設定ファイル（`~/.config/birdtray-config.json`）を上書きせず、
+必要なキーだけ差し替えます。選んだフォルダや他の設定はそのまま残り、実行前の内容は
+`.bak.<日時>` に退避されます。何度実行しても、変化がなければ何も書きません。
+
+数字を出したくなったら Birdtray の設定画面で「Show unread email count」を戻すか、
+設定ファイルの `common/showunreademailcount` を `true` にしてください。
+
+> 把握しておいてほしい前提が 3 つあります。
+>
+> - `.msf` は Thunderbird 独自の Mork 形式です。Thunderbird 側はこれを SQLite に
+>   置き換える作業を進めているので、将来のバージョンで Birdtray が読めなくなる
+>   可能性があります。そのときは Birdtray の更新を待つか、IMAP を直接見る方式
+>   （`curl` の `imaps://` で `STATUS INBOX (UNSEEN)`）に切り替えることになります。
+> - Birdtray は AUR のパッケージです。`setup.sh` は公式リポジトリ → AUR の順に
+>   試しますが、AUR のパッケージが消えている / ビルドが通らないこともあります。
+>   その場合は省略された旨が表示されます。
+> - Flatpak 版の Thunderbird はプロファイルの場所が異なり（サンドボックス内）、
+>   Birdtray から読めません。pacman 版を使ってください。
 
 ### 電源メニュー（󰐥 のアイコン / `SUPER + X`）
 
