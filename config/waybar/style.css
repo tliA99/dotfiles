@@ -114,12 +114,7 @@ window#waybar.empty .modules-center {
 #custom-notification,
 #idle_inhibitor,
 #pulseaudio,
-#backlight,
-#cpu,
-#memory,
 #temperature,
-#network,
-#bluetooth,
 #battery,
 #clock,
 #custom-power {
@@ -134,14 +129,11 @@ window#waybar.empty .modules-center {
 #idle_inhibitor.activated { color: @yellow; }
 #pulseaudio          { color: @cyan; }
 #pulseaudio.muted    { color: @muted; }
-#backlight           { color: @yellow; }
-#cpu                 { color: @green; }
-#memory              { color: @magenta; }
 #temperature         { color: @cyan; }
-#network             { color: @blue; }
-#network.disconnected { color: @red; }
-#bluetooth           { color: @blue; }
-#bluetooth.disabled  { color: @muted; }
+
+/* 輝度 / CPU / メモリのモジュールは置いていないのでスタイルもありません。
+   ネットワークと Bluetooth も nm-applet / blueman-applet のトレイアイコンに
+   任せています。 */
 
 #temperature.critical {
   color: @bg_solid;

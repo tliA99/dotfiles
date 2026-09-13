@@ -112,6 +112,10 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("nm-applet --indicator")
     hl.exec_cmd("blueman-applet")
 
+    -- Thunderbird の未読をトレイに出す。入れていないときは何もしません。
+    -- アイコンの色は ~/.config/scripts/birdtray-theme.sh で決めています。
+    hl.exec_cmd("command -v birdtray >/dev/null 2>&1 && birdtray")
+
     -- 壁紙。hyprpaper は設定内の path が実在しないと何も出ないので、
     -- setup.sh が ~/Pictures/wallpapers/wall.png を用意してから起動します。
     hl.exec_cmd("hyprpaper")
@@ -287,7 +291,9 @@ hl.bind(mod .. " + SHIFT + Q", hl.dsp.exec_cmd(
     "command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"),
     { description = "ログアウト" })
 
--- 電源メニュー / Wi-Fi メニュー（waybar の 󰐥 と 󰤨 をクリックしても同じものが出ます）
+-- 電源メニューは waybar の 󰐥 をクリックしても出ます。
+-- Wi-Fi はトレイの nm-applet に任せているので、バーにボタンはありません。
+-- キーボードから繋ぎたいときはこのメニューを使います。
 hl.bind(mod .. " + X",         hl.dsp.exec_cmd(powermenu), { description = "電源メニュー" })
 hl.bind(mod .. " + SHIFT + W", hl.dsp.exec_cmd(wifimenu),  { description = "Wi-Fi メニュー" })
 

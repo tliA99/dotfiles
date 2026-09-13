@@ -18,12 +18,7 @@
     "custom/notification",
     "idle_inhibitor",
     "pulseaudio",
-    "backlight",
-    "cpu",
-    "memory",
     "temperature",
-    "network",
-    "bluetooth",
     "battery",
     "clock",
     "custom/power"
@@ -116,27 +111,11 @@
     "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
   },
 
-  "backlight": {
-    "format": "{icon} {percent}%",
-    "format-icons": ["󰃞", "󰃟", "󰃠"],
-    "on-scroll-up": "brightnessctl -e4 -n2 set 5%+",
-    "on-scroll-down": "brightnessctl -e4 -n2 set 5%-",
-    "tooltip": false
-  },
-
-  "cpu": {
-    "interval": 5,
-    "format": "󰻠 {usage}%",
-    "on-click": "foot -e btop",
-    "tooltip": false
-  },
-
-  "memory": {
-    "interval": 10,
-    "format": "󰍛 {percentage}%",
-    "tooltip-format": "{used:0.1f}G / {total:0.1f}G",
-    "on-click": "foot -e btop"
-  },
+  // 輝度 / CPU / メモリのモジュールは置いていません（バーを詰めすぎないため）。
+  // 輝度は XF86MonBrightness キー（hyprland.lua）で変え、
+  // CPU とメモリは必要なときに btop で見ます。
+  // 戻したい場合は modules-right に "backlight" / "cpu" / "memory" を足して、
+  // それぞれのモジュール設定を書いてください。
 
   // hwmon のパスはカーネル/機種で変わるので、
   // 温度が出ない・値がおかしいときは `sensors` で確認して
@@ -148,30 +127,12 @@
     "format-critical": "󰸁 {temperatureC}°C"
   },
 
-  // 左クリックで Wi-Fi メニュー（一覧から接続 / ON・OFF）、
-  // 右クリックで Wi-Fi の ON/OFF を即切り替え、中クリックで nmtui。
-  // スクリプトは ~/.config/scripts/ に置かれます（setup.sh が配置）。
-  "network": {
-    "format-wifi": "󰤨 {signalStrength}%",
-    "format-ethernet": "󰈀 有線",
-    "format-linked": "󰈂 {ifname}",
-    "format-disconnected": "󰤭 未接続",
-    "format-disabled": "󰖪 Wi-Fi OFF",
-    "tooltip-format-wifi": "{essid}\n{ipaddr}\n↓{bandwidthDownBits} ↑{bandwidthUpBits}\n\n左: Wi-Fi メニュー / 右: ON・OFF / 中: nmtui",
-    "tooltip-format-ethernet": "{ifname}\n{ipaddr}",
-    "tooltip-format-disconnected": "未接続\n\n左: Wi-Fi メニュー / 右: ON・OFF / 中: nmtui",
-    "on-click": "$HOME/.config/scripts/wifi-menu.sh",
-    "on-click-right": "$HOME/.config/scripts/wifi-menu.sh toggle",
-    "on-click-middle": "foot -e nmtui"
-  },
-
-  "bluetooth": {
-    "format": "󰂯",
-    "format-disabled": "󰂲",
-    "format-connected": "󰂱 {num_connections}",
-    "tooltip-format-connected": "{device_enumerate}",
-    "on-click": "blueman-manager"
-  },
+  // network / bluetooth のモジュールは置いていません。
+  // nm-applet と blueman-applet のトレイアイコン（tray モジュール）と二重に
+  // なるためです。Wi-Fi はトレイのアイコンから、または SUPER + SHIFT + W の
+  // Wi-Fi メニュー（~/.config/scripts/wifi-menu.sh）から操作します。
+  // バーに戻したい場合は modules-right に "network" / "bluetooth" を足し、
+  // hyprland.lua の nm-applet / blueman-applet の自動起動を外してください。
 
   // 設計容量 51Wh。劣化していると 100% でも持ち時間が短くなります。
   // 充電しきい値を 60/80 にしているので、満充電表示は 80% で止まります。

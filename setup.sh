@@ -55,6 +55,19 @@ pac_opt() {
   done
 }
 
+# aur_opt: 無くても致命的でないもの。公式リポジトリ → AUR の順に試す。
+#          hyprshutdown や birdtray のように AUR にしか無いものがあるため。
+aur_opt() {
+  local p
+  for p in "$@"; do
+    sudo pacman -S --needed --noconfirm "$p" >/dev/null 2>&1 && continue
+    if [[ -n ${AUR_HELPER:-} ]] && $AUR_HELPER -S --needed --noconfirm "$p" >/dev/null 2>&1; then
+      continue
+    fi
+    warn "  省略: $p (リポジトリにも AUR にも無い、またはビルドに失敗)"
+  done
+}
+
 have() { command -v "$1" >/dev/null 2>&1; }
 
 # deploy <リポジトリ内の相対パス> <配置先>
@@ -147,9 +160,10 @@ deploy_all() {
   deploy swaync/style.css    "$HOME/.config/swaync/style.css"
 
   # waybar / キーバインドから呼ぶスクリプト。実行ビットを立てておく。
-  deploy scripts/wifi-menu.sh  "$HOME/.config/scripts/wifi-menu.sh"
-  deploy scripts/power-menu.sh "$HOME/.config/scripts/power-menu.sh"
-  chmod +x "$HOME/.config/scripts/wifi-menu.sh" "$HOME/.config/scripts/power-menu.sh" 2>/dev/null || true
+  deploy scripts/wifi-menu.sh      "$HOME/.config/scripts/wifi-menu.sh"
+  deploy scripts/power-menu.sh     "$HOME/.config/scripts/power-menu.sh"
+  deploy scripts/birdtray-theme.sh "$HOME/.config/scripts/birdtray-theme.sh"
+  chmod +x "$HOME/.config/scripts/"*.sh 2>/dev/null || true
 
   # 0.54 以前の設定が残っていると紛らわしいので退避する
   if [[ -f "$HOME/.config/hypr/hyprland.conf" ]]; then
@@ -413,7 +427,19 @@ pac \
   firefox
 
 # hyprland-qtutils / hyprland-guiutils が無いと Hyprland が起動時に警告を出します
-pac_opt hyprland-qtutils hyprland-guiutils hyprshutdown hyprlauncher
+# （hyprshutdown / hyprlauncher は AUR にしか無いので aur_opt で入れます）
+aur_opt hyprland-qtutils hyprland-guiutils hyprshutdown hyprlauncher
+
+# --- Thunderbird の未読をトレイに出す（任意）
+# Birdtray は Thunderbird の要約ファイル（.msf）を直接読むので拡張機能が不要です。
+# アイコンの色は config/scripts/birdtray-theme.sh で Tokyo Night に合わせられます。
+if have thunderbird; then
+  info "Thunderbird があるので Birdtray（未読をトレイに表示）も入れます"
+  aur_opt birdtray
+  if have birdtray; then
+    NOTES+=("Birdtray は一度起動して監視するフォルダを選んでから、~/.config/scripts/birdtray-theme.sh を実行してください（未読数の数字を消して色だけにします）。")
+  fi
+fi
 
 # --- Hyprland のバージョン確認（ここが今回いちばん大事）
 HYPR_VER=$(Hyprland --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
@@ -521,8 +547,8 @@ if have waybar; then
   fi
 fi
 
-# waybar の Wi-Fi / 電源メニューはこのスクリプトを叩くので、実行できるか見ておく
-for scr in wifi-menu.sh power-menu.sh; do
+# 電源メニュー（waybar）と Wi-Fi メニュー（SUPER + SHIFT + W）が叩くスクリプト
+for scr in wifi-menu.sh power-menu.sh birdtray-theme.sh; do
   if [[ -x "$HOME/.config/scripts/$scr" ]]; then
     if bash -n "$HOME/.config/scripts/$scr" 2>/dev/null; then
       ok "$scr を配置済み（実行可）。"
@@ -537,13 +563,13 @@ done
 # Wi-Fi メニューは nmcli 経由で NetworkManager を触ります
 if have nmcli; then
   if systemctl is-enabled NetworkManager.service >/dev/null 2>&1; then
-    ok "NetworkManager は有効です（waybar から Wi-Fi を ON/OFF できます）。"
+    ok "NetworkManager は有効です（トレイのアイコンと Wi-Fi メニューが使えます）。"
   else
-    warn "NetworkManager が有効ではありません。waybar の Wi-Fi メニューは動きません。"
+    warn "NetworkManager が有効ではありません。Wi-Fi メニューもトレイのアイコンも動きません。"
     NOTES+=("sudo systemctl enable --now NetworkManager で有効にしてください。")
   fi
 else
-  warn "nmcli がありません。waybar の Wi-Fi メニューは動きません。"
+  warn "nmcli がありません。Wi-Fi メニューは動きません。"
 fi
 
 for f in hypridle.conf hyprlock.conf hyprpaper.conf; do

@@ -13,7 +13,7 @@ EndeavourOS を入れた X1 Carbon Gen 7 を、Hyprland のデスクトップに
 | `config/wofi/` | ランチャ（設定 + CSS） |
 | `config/foot/` | ターミナル |
 | `config/swaync/` | 通知センター（設定 + CSS） |
-| `config/scripts/` | waybar / キーバインドから呼ぶスクリプト（Wi-Fi メニュー・電源メニュー） |
+| `config/scripts/` | waybar / キーバインドから呼ぶスクリプト（Wi-Fi メニュー・電源メニュー・Birdtray の配色） |
 | `config/greetd/` | ログイン画面（greetd + ReGreet の設定 + CSS） |
 
 配色は Tokyo Night Storm で全部揃えてあります。
@@ -187,7 +187,7 @@ journalctl -b -u greetd          # 原因はここに出ます
 | `SUPER + ALT + J` | 分割方向の切り替え |
 | `SUPER + ALT + L` | 画面ロック |
 | `SUPER + X` | 電源メニュー（ロック / サスペンド / ログアウト / 再起動 / シャットダウン） |
-| `SUPER + SHIFT + W` | Wi-Fi メニュー（一覧から接続 / ON・OFF） |
+| `SUPER + SHIFT + W` | Wi-Fi メニュー（SSID 一覧から接続 / ON・OFF） |
 | `SUPER + SHIFT + Q` | ログアウト（確認なしで即ログアウト） |
 | `Print` / `SHIFT + Print` / `SUPER + Print` | 範囲選択→クリップボード / 全画面→クリップボード / 範囲選択→保存 |
 
@@ -222,6 +222,7 @@ tail -f $XDG_RUNTIME_DIR/hypr/*/hyprland.log
 | アイコンが豆腐 | Nerd Font（`ttf-jetbrains-mono-nerd`）が入っているか |
 | Wi-Fi / 電源メニューが出ない | `~/.config/scripts/*.sh` に実行権限があるか（`./setup.sh --configs-only` で付きます）。端末から直接叩くとエラーが見えます |
 | Wi-Fi メニューに SSID が出ない | `nmcli device wifi list` が通るか。NetworkManager が止まっていると空になります |
+| Birdtray の色が未読で変わらない | 設定画面で監視フォルダを選べているか。選んだあとに `birdtray-theme.sh` を実行し直してください |
 | 日本語が豆腐 | `noto-fonts-cjk` が入っているか |
 | foot が `invalid section name colors` | foot 1.26 で `[colors]` は廃止。`[colors-dark]` / `[colors-light]` に分かれました |
 | ログイン画面が真っ黒 / 出ない | `journalctl -b -u greetd`。`Ctrl+Alt+F2` で TTY に逃げられます |
@@ -240,26 +241,52 @@ hyprctl layers      # レイヤールールの namespace 確認用
 
 ---
 
-## 5. waybar からの操作（Wi-Fi と電源）
+## 5. バーの中身（Wi-Fi・電源・メール）
 
-バーの右側にある 󰤨（ネットワーク）と 󰐥（電源）から、端末を開かずに操作できます。
-どちらも wofi のメニューで、中身は `config/scripts/` の 2 本のスクリプトです。
+### 何をどこで操作するか
 
-### Wi-Fi（ネットワークのアイコン）
+ネットワークと Bluetooth は **トレイのアイコン**（`nm-applet` / `blueman-applet`）に任せています。
+waybar の `network` / `bluetooth` モジュールも出すとアイコンが二重になるためです。
+電源だけは専用のボタン（󰐥）をバーの右端に置いています。
 
-| 操作 | 動作 |
+| やりたいこと | どこから |
 | --- | --- |
-| 左クリック | Wi-Fi メニュー（SSID 一覧から接続 / 再スキャン / ON・OFF） |
-| 右クリック | Wi-Fi の ON/OFF を即切り替え（`nmcli radio wifi`） |
-| 中クリック | `nmtui` を foot で開く（固定 IP など細かい設定用） |
+| Wi-Fi の接続先を変える / ON・OFF | トレイのネットワークアイコン、または `SUPER + SHIFT + W` |
+| Bluetooth の接続 | トレイの Bluetooth アイコン（`blueman`） |
+| 電源操作 | バー右端の 󰐥、または `SUPER + X` |
+| 画面の明るさを変える | `XF86MonBrightness` キー（輝度モジュールは置いていません） |
+| 細かいネットワーク設定（固定 IP など） | `nmtui` か `nm-connection-editor` |
+| Thunderbird の未読を見る | トレイの封筒アイコン（Birdtray / 任意・下記） |
 
-`SUPER + SHIFT + W` でも同じメニューが出ます。
+ネットワークと Bluetooth をバーに戻す場合は、`modules-right` に `"network"` / `"bluetooth"` を足すだけでなく、
+`hyprland.lua` の `nm-applet` / `blueman-applet` の自動起動を外してください（片方だけだと二重になります）。
 
-- 接続中の SSID には 󰄬 が付きます。鍵マークの横が暗号化方式です。
+### バーに置いていないもの
+
+バーの右側は **トレイ / 通知 / スリープ抑止 / 音量 / 温度 / バッテリー / 時刻 / 電源** だけです。
+輝度・CPU・メモリ・ネットワーク・Bluetooth のモジュールは置いていません。
+
+| 外したもの | 代わりの見方・操作 |
+| --- | --- |
+| 輝度 | `XF86MonBrightnessUp` / `Down` キー（`hyprland.lua` で `brightnessctl`）。値は `brightnessctl` で確認 |
+| CPU / メモリ | `btop`（`SUPER + Return` で端末を開いて実行） |
+| ネットワーク / Bluetooth | トレイの `nm-applet` / `blueman-applet` アイコン |
+
+戻したいモジュールがあれば、`waybar/config.jsonc` の `modules-right` に名前を足して
+設定を書いてください。外した経緯と書き方はファイル内のコメントに残してあります。
+温度とバッテリーは数値を出したままです。
+
+### Wi-Fi メニュー（`SUPER + SHIFT + W`）
+
+トレイのアイコンとは別に、wofi で動く Wi-Fi メニュー
+（`config/scripts/wifi-menu.sh`）も入れてあります。キーボードだけで繋ぎたいとき用です。
+
+- SSID 一覧から選んで接続。接続中の SSID には 󰄬 が付き、鍵マークの横が暗号化方式です。
 - 保存済みの接続はパスワードを聞かずに繋ぎます。繋がらなかったときだけ聞き直します。
 - 暗号化なしのネットワークはパスワードを聞きません。
 - Wi-Fi が OFF のときは「ON にする」だけのメニューになります。
 - 一覧は NetworkManager のキャッシュなので、出てこない SSID は「󰑐 再スキャン」を選んでください。
+- `wifi-menu.sh toggle` で、メニューを出さずに ON/OFF だけ切り替えられます。
 
 `nmcli` を使うので **NetworkManager が有効**である必要があります（`setup.sh` が導入・確認します）。
 
@@ -267,9 +294,53 @@ hyprctl layers      # レイヤールールの namespace 確認用
 sudo systemctl enable --now NetworkManager   # 止まっていたら
 ```
 
-### 電源メニュー（󰐥 のアイコン）
+### Thunderbird の未読（トレイ / 任意）
 
-左クリックで電源メニュー、右クリックで即ロックです。`SUPER + X` でも開きます。
+Thunderbird の未読を出したい場合は **Birdtray** をトレイに置きます。Thunderbird の
+フォルダ要約ファイル（`.msf`）を直接読むので、拡張機能は要りません。waybar 側は
+トレイに出るだけなので設定の変更は不要です。アイコンをクリックすると Thunderbird の
+ウィンドウを隠す / 戻すができます。
+
+既定では未読数を数字でアイコンに描きますが、このリポジトリでは**数字を出さず色だけ**に
+しています（バーの他のモジュールと揃えるため）。
+
+| 状態 | 見え方 |
+| --- | --- |
+| 未読なし | 灰色の封筒（`#565f89`） |
+| 未読あり | 青の封筒（`#7aa2f7`） |
+
+手順は 4 段階です。監視するフォルダの指定は Birdtray の設定画面でしか行えないため、
+ここだけ手作業になります。
+
+```bash
+sudo pacman -S thunderbird     # 未導入なら
+./setup.sh                     # Birdtray を AUR から入れる（Thunderbird があるときだけ）
+birdtray                       # 設定画面で監視するフォルダ（アカウント）を選ぶ
+~/.config/scripts/birdtray-theme.sh   # アイコンを Tokyo Night にし、数字を消す
+```
+
+`birdtray-theme.sh` は設定ファイル（`~/.config/birdtray-config.json`）を上書きせず、
+必要なキーだけ差し替えます。選んだフォルダや他の設定はそのまま残り、実行前の内容は
+`.bak.<日時>` に退避されます。何度実行しても、変化がなければ何も書きません。
+
+数字を出したくなったら Birdtray の設定画面で「Show unread email count」を戻すか、
+設定ファイルの `common/showunreademailcount` を `true` にしてください。
+
+> 把握しておいてほしい前提が 3 つあります。
+>
+> - `.msf` は Thunderbird 独自の Mork 形式です。Thunderbird 側はこれを SQLite に
+>   置き換える作業を進めているので、将来のバージョンで Birdtray が読めなくなる
+>   可能性があります。そのときは Birdtray の更新を待つか、IMAP を直接見る方式
+>   （`curl` の `imaps://` で `STATUS INBOX (UNSEEN)`）に切り替えることになります。
+> - Birdtray は AUR のパッケージです。`setup.sh` は公式リポジトリ → AUR の順に
+>   試しますが、AUR のパッケージが消えている / ビルドが通らないこともあります。
+>   その場合は省略された旨が表示されます。
+> - Flatpak 版の Thunderbird はプロファイルの場所が異なり（サンドボックス内）、
+>   Birdtray から読めません。pacman 版を使ってください。
+
+### 電源メニュー（󰐥 のアイコン / `SUPER + X`）
+
+左クリックで電源メニュー、右クリックで即ロックです。
 
 | 項目 | 動作 |
 | --- | --- |
