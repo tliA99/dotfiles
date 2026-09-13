@@ -55,11 +55,13 @@ local wifimenu     = scripts .. "/wifi-menu.sh"
 --
 -- 自分のパネルと現在の倍率は `hyprctl monitors` で確認できます。
 -- 再起動せずに試すなら:
---   hyprctl eval 'hl.monitor({ output = "eDP-1", scale = 1 })'
+--   hyprctl eval 'hl.monitor({ output = "eDP-1", scale = 1.25 })'
 --
--- 端数倍率（1.25 や 1.5）は XWayland 経由のアプリがぼやけます。
--- 整数倍率で収まるならそちらが無難です。
-local monitor_scale = 1
+-- いまは 1.25 にしています。1920x1080 なら論理解像度は 1536x864 で、
+-- 割り切れる（1920/1.25 = 1536、1080/1.25 = 864）ので表示がにじみません。
+-- 端数倍率なので XWayland 経由のアプリ（Zoom や一部の Electron など）は
+-- 少しぼやけます。気になる場合は 1 に戻すか、下の xwayland の項を読んでください。
+local monitor_scale = 1.25
 
 hl.monitor({
     output   = "eDP-1",
@@ -250,6 +252,16 @@ hl.config({
             --   ["tap-and-drag"] = false,
         },
     },
+
+    -- scale が端数（1.25）なので XWayland のアプリは拡大されてぼやけます。
+    -- にじみが気になる場合は下を有効にしてください。XWayland 側を 1 倍で
+    -- 描かせるので輪郭はきれいになりますが、そのぶん文字が小さくなります
+    -- （GDK_SCALE などは整数しか取れないため 1.25 では埋め合わせられません）。
+    -- どちらを嫌がるかは人によるので、既定は「ぼやけるが大きさは合う」側にしています。
+    --
+    -- xwayland = {
+    --     force_zero_scaling = true,
+    -- },
 })
 
 -- トラックポイント。感度が合わなければ調整する（名前は `hyprctl devices` で確認）

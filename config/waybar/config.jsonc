@@ -18,7 +18,6 @@
     "custom/notification",
     "idle_inhibitor",
     "pulseaudio",
-    "temperature",
     "battery",
     "clock",
     "custom/power"
@@ -111,21 +110,11 @@
     "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
   },
 
-  // 輝度 / CPU / メモリのモジュールは置いていません（バーを詰めすぎないため）。
+  // 輝度 / CPU / メモリ / 温度のモジュールは置いていません（バーを詰めすぎないため）。
   // 輝度は XF86MonBrightness キー（hyprland.lua）で変え、
-  // CPU とメモリは必要なときに btop で見ます。
-  // 戻したい場合は modules-right に "backlight" / "cpu" / "memory" を足して、
-  // それぞれのモジュール設定を書いてください。
-
-  // hwmon のパスはカーネル/機種で変わるので、
-  // 温度が出ない・値がおかしいときは `sensors` で確認して
-  // "hwmon-path" か "thermal-zone" を明示してください。
-  "temperature": {
-    "interval": 10,
-    "critical-threshold": 85,
-    "format": "󰔏 {temperatureC}°C",
-    "format-critical": "󰸁 {temperatureC}°C"
-  },
+  // CPU・メモリ・温度は必要なときに btop や sensors で見ます。
+  // 戻したい場合は modules-right に "backlight" / "cpu" / "memory" / "temperature" を
+  // 足して、それぞれのモジュール設定を書いてください。
 
   // network / bluetooth のモジュールは置いていません。
   // nm-applet と blueman-applet のトレイアイコン（tray モジュール）と二重に
