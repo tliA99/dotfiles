@@ -3,13 +3,15 @@
 // ワークスペースは "hyprland/workspaces"。"sway/workspaces" のままだと動きません。
 // スクロール時の dispatch は Hyprland 0.55+ の Lua 形式です。
 {
+  // モニター倍率は 1（等倍）のまま、Waybar だけ見やすくするため
+  // 全体を 1.25 倍で組んでいます（元は height:34 / margin-top:6 / margin:8）。
   "layer": "top",
   "position": "top",
-  "height": 34,
+  "height": 43,
   "spacing": 0,
-  "margin-top": 6,
-  "margin-left": 8,
-  "margin-right": 8,
+  "margin-top": 8,
+  "margin-left": 10,
+  "margin-right": 10,
 
   "modules-left": ["hyprland/workspaces", "hyprland/submap"],
   "modules-center": ["hyprland/window"],
@@ -62,8 +64,8 @@
   },
 
   "tray": {
-    "icon-size": 16,
-    "spacing": 8
+    "icon-size": 20,
+    "spacing": 10
   },
 
   "custom/notification": {
