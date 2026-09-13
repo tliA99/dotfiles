@@ -146,6 +146,11 @@ deploy_all() {
   deploy swaync/config.json  "$HOME/.config/swaync/config.json"
   deploy swaync/style.css    "$HOME/.config/swaync/style.css"
 
+  # waybar / キーバインドから呼ぶスクリプト。実行ビットを立てておく。
+  deploy scripts/wifi-menu.sh  "$HOME/.config/scripts/wifi-menu.sh"
+  deploy scripts/power-menu.sh "$HOME/.config/scripts/power-menu.sh"
+  chmod +x "$HOME/.config/scripts/wifi-menu.sh" "$HOME/.config/scripts/power-menu.sh" 2>/dev/null || true
+
   # 0.54 以前の設定が残っていると紛らわしいので退避する
   if [[ -f "$HOME/.config/hypr/hyprland.conf" ]]; then
     mv "$HOME/.config/hypr/hyprland.conf" "$HOME/.config/hypr/hyprland.conf.old"
@@ -514,6 +519,31 @@ if have waybar; then
   else
     warn "waybar の設定に JSON エラーがあります。バーが出ない原因になります。"
   fi
+fi
+
+# waybar の Wi-Fi / 電源メニューはこのスクリプトを叩くので、実行できるか見ておく
+for scr in wifi-menu.sh power-menu.sh; do
+  if [[ -x "$HOME/.config/scripts/$scr" ]]; then
+    if bash -n "$HOME/.config/scripts/$scr" 2>/dev/null; then
+      ok "$scr を配置済み（実行可）。"
+    else
+      warn "$HOME/.config/scripts/$scr に文法エラーがあります。"
+    fi
+  else
+    warn "$HOME/.config/scripts/$scr が無い、または実行できません。"
+  fi
+done
+
+# Wi-Fi メニューは nmcli 経由で NetworkManager を触ります
+if have nmcli; then
+  if systemctl is-enabled NetworkManager.service >/dev/null 2>&1; then
+    ok "NetworkManager は有効です（waybar から Wi-Fi を ON/OFF できます）。"
+  else
+    warn "NetworkManager が有効ではありません。waybar の Wi-Fi メニューは動きません。"
+    NOTES+=("sudo systemctl enable --now NetworkManager で有効にしてください。")
+  fi
+else
+  warn "nmcli がありません。waybar の Wi-Fi メニューは動きません。"
 fi
 
 for f in hypridle.conf hyprlock.conf hyprpaper.conf; do

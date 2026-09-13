@@ -121,7 +121,8 @@ window#waybar.empty .modules-center {
 #network,
 #bluetooth,
 #battery,
-#clock {
+#clock,
+#custom-power {
   padding: 0 9px;
   margin: 4px 1px;
   border-radius: 8px;
@@ -160,6 +161,17 @@ window#waybar.empty .modules-center {
   color: @fg;
   font-weight: 600;
   padding: 0 12px;
+}
+
+/* 電源メニュー。押し間違いが痛いので、ホバーで赤くして意識させる */
+#custom-power {
+  color: @red;
+  padding: 0 11px;
+}
+
+#custom-power:hover {
+  color: @bg_solid;
+  background: @red;
 }
 
 #tray > .passive { -gtk-icon-effect: dim; }

@@ -13,6 +13,7 @@ EndeavourOS を入れた X1 Carbon Gen 7 を、Hyprland のデスクトップに
 | `config/wofi/` | ランチャ（設定 + CSS） |
 | `config/foot/` | ターミナル |
 | `config/swaync/` | 通知センター（設定 + CSS） |
+| `config/scripts/` | waybar / キーバインドから呼ぶスクリプト（Wi-Fi メニュー・電源メニュー） |
 | `config/greetd/` | ログイン画面（greetd + ReGreet の設定 + CSS） |
 
 配色は Tokyo Night Storm で全部揃えてあります。
@@ -90,7 +91,7 @@ chmod +x setup.sh
 4. TLP による電源管理（`power-profiles-daemon` があれば外す）と zram
 5. Hyprland 一式、フォント、fcitx5 + Mozc
 6. ログインマネージャ（greetd + ReGreet）の導入と有効化
-7. 壁紙の生成と、`config/` 以下の設定配置
+7. 壁紙の生成と、`config/` 以下の設定配置（waybar から呼ぶスクリプトもここで `~/.config/scripts/` に入ります）
 
 途中でパッケージが 1 つ見つからなくても止まりません。入らなかったものは最後にまとめて表示します。
 
@@ -185,7 +186,9 @@ journalctl -b -u greetd          # 原因はここに出ます
 | `SUPER + S` | スクラッチパッド |
 | `SUPER + ALT + J` | 分割方向の切り替え |
 | `SUPER + ALT + L` | 画面ロック |
-| `SUPER + SHIFT + Q` | ログアウト |
+| `SUPER + X` | 電源メニュー（ロック / サスペンド / ログアウト / 再起動 / シャットダウン） |
+| `SUPER + SHIFT + W` | Wi-Fi メニュー（一覧から接続 / ON・OFF） |
+| `SUPER + SHIFT + Q` | ログアウト（確認なしで即ログアウト） |
 | `Print` / `SHIFT + Print` / `SUPER + Print` | 範囲選択→クリップボード / 全画面→クリップボード / 範囲選択→保存 |
 
 > ロックと分割切り替えを `ALT` 側に逃がしているのは、`SUPER + L` / `SUPER + J` が
@@ -217,6 +220,8 @@ tail -f $XDG_RUNTIME_DIR/hypr/*/hyprland.log
 | バーが出ない | `~/.config/waybar/config.jsonc` の JSON が壊れている。`waybar` を端末から直接起動するとエラーが見えます |
 | バーは出るがワークスペースが空 | モジュール名が `sway/workspaces` になっていないか（`hyprland/workspaces` が正解） |
 | アイコンが豆腐 | Nerd Font（`ttf-jetbrains-mono-nerd`）が入っているか |
+| Wi-Fi / 電源メニューが出ない | `~/.config/scripts/*.sh` に実行権限があるか（`./setup.sh --configs-only` で付きます）。端末から直接叩くとエラーが見えます |
+| Wi-Fi メニューに SSID が出ない | `nmcli device wifi list` が通るか。NetworkManager が止まっていると空になります |
 | 日本語が豆腐 | `noto-fonts-cjk` が入っているか |
 | foot が `invalid section name colors` | foot 1.26 で `[colors]` は廃止。`[colors-dark]` / `[colors-light]` に分かれました |
 | ログイン画面が真っ黒 / 出ない | `journalctl -b -u greetd`。`Ctrl+Alt+F2` で TTY に逃げられます |
@@ -235,7 +240,63 @@ hyprctl layers      # レイヤールールの namespace 確認用
 
 ---
 
-## 5. カスタマイズの勘どころ
+## 5. waybar からの操作（Wi-Fi と電源）
+
+バーの右側にある 󰤨（ネットワーク）と 󰐥（電源）から、端末を開かずに操作できます。
+どちらも wofi のメニューで、中身は `config/scripts/` の 2 本のスクリプトです。
+
+### Wi-Fi（ネットワークのアイコン）
+
+| 操作 | 動作 |
+| --- | --- |
+| 左クリック | Wi-Fi メニュー（SSID 一覧から接続 / 再スキャン / ON・OFF） |
+| 右クリック | Wi-Fi の ON/OFF を即切り替え（`nmcli radio wifi`） |
+| 中クリック | `nmtui` を foot で開く（固定 IP など細かい設定用） |
+
+`SUPER + SHIFT + W` でも同じメニューが出ます。
+
+- 接続中の SSID には 󰄬 が付きます。鍵マークの横が暗号化方式です。
+- 保存済みの接続はパスワードを聞かずに繋ぎます。繋がらなかったときだけ聞き直します。
+- 暗号化なしのネットワークはパスワードを聞きません。
+- Wi-Fi が OFF のときは「ON にする」だけのメニューになります。
+- 一覧は NetworkManager のキャッシュなので、出てこない SSID は「󰑐 再スキャン」を選んでください。
+
+`nmcli` を使うので **NetworkManager が有効**である必要があります（`setup.sh` が導入・確認します）。
+
+```bash
+sudo systemctl enable --now NetworkManager   # 止まっていたら
+```
+
+### 電源メニュー（󰐥 のアイコン）
+
+左クリックで電源メニュー、右クリックで即ロックです。`SUPER + X` でも開きます。
+
+| 項目 | 動作 |
+| --- | --- |
+| ロック | `hyprlock`（二重起動はしません） |
+| サスペンド | ロックしてから `systemctl suspend` |
+| 休止 (hibernate) | `systemctl hibernate` — **swap がある場合だけ項目が出ます** |
+| ログアウト | `hyprshutdown` があればそれ、無ければ `hyprctl dispatch 'hl.dsp.exit()'` |
+| 再起動 | `systemctl reboot` |
+| シャットダウン | `systemctl poweroff` |
+
+休止・ログアウト・再起動・シャットダウンは「はい / いいえ」の確認を 1 枚はさみます
+（押し間違えると作業が飛ぶため）。ロックとサスペンドは確認なしで実行します。
+
+> この構成は swap パーティションを作らず zram を使うので、通常は休止できません。
+> そのためメニューからも休止は隠してあります。使いたい場合は swapfile を作って
+> カーネルパラメータに `resume=` を渡してください。
+
+設定を変えたあとの反映:
+
+```bash
+./setup.sh --configs-only
+pkill -SIGUSR2 waybar || waybar &
+```
+
+---
+
+## 6. カスタマイズの勘どころ
 
 ### バッテリーと見た目のトレードオフ
 
@@ -315,7 +376,7 @@ GRUB を選んで入れた場合は `/etc/default/grub` の `GRUB_CMDLINE_LINUX_
 
 ---
 
-## 6. 導入後にやること
+## 7. 導入後にやること
 
 ### バッテリーの状態確認
 
@@ -354,7 +415,7 @@ ThinkPad は BIOS も ME も LVFS 経由で流れてきます。
 
 ---
 
-## 7. さらに作り込むなら
+## 8. さらに作り込むなら
 
 `hyprland.lua` は Lua なので、`require()` でファイルを分割できます。
 分割したファイルは独立したスコープで読まれるため、片方でエラーが出ても
