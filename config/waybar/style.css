@@ -114,9 +114,6 @@ window#waybar.empty .modules-center {
 #custom-notification,
 #idle_inhibitor,
 #pulseaudio,
-#backlight,
-#cpu,
-#memory,
 #temperature,
 #battery,
 #clock,
@@ -132,23 +129,11 @@ window#waybar.empty .modules-center {
 #idle_inhibitor.activated { color: @yellow; }
 #pulseaudio          { color: @cyan; }
 #pulseaudio.muted    { color: @muted; }
-#backlight           { color: @yellow; }
-#cpu                 { color: @green; }
-#memory              { color: @magenta; }
 #temperature         { color: @cyan; }
 
-/* 使用率の数値はバーに出していないので、混んできたら色で知らせます
-   （正確な値はツールチップか btop で）。
-   ネットワークと Bluetooth は nm-applet / blueman-applet のトレイアイコンに
-   任せているので、ここにスタイルはありません。 */
-#cpu.warning,
-#memory.warning { color: @yellow; }
-
-#cpu.critical,
-#memory.critical {
-  color: @bg_solid;
-  background: @red;
-}
+/* 輝度 / CPU / メモリのモジュールは置いていないのでスタイルもありません。
+   ネットワークと Bluetooth も nm-applet / blueman-applet のトレイアイコンに
+   任せています。 */
 
 #temperature.critical {
   color: @bg_solid;

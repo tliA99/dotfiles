@@ -245,35 +245,36 @@ hyprctl layers      # レイヤールールの namespace 確認用
 
 ### 何をどこで操作するか
 
-ネットワークと Bluetooth は **トレイのアイコン**（`nm-applet` / `blueman-applet`）に任せていて、
-waybar 側の `network` / `bluetooth` モジュールは置いていません。両方出すとアイコンが
-二重になるためです。電源だけは専用のボタン（󰐥）をバーの右端に置いています。
+ネットワークと Bluetooth は **トレイのアイコン**（`nm-applet` / `blueman-applet`）に任せています。
+waybar の `network` / `bluetooth` モジュールも出すとアイコンが二重になるためです。
+電源だけは専用のボタン（󰐥）をバーの右端に置いています。
 
 | やりたいこと | どこから |
 | --- | --- |
 | Wi-Fi の接続先を変える / ON・OFF | トレイのネットワークアイコン、または `SUPER + SHIFT + W` |
 | Bluetooth の接続 | トレイの Bluetooth アイコン（`blueman`） |
 | 電源操作 | バー右端の 󰐥、または `SUPER + X` |
+| 画面の明るさを変える | `XF86MonBrightness` キー（輝度モジュールは置いていません） |
 | 細かいネットワーク設定（固定 IP など） | `nmtui` か `nm-connection-editor` |
 | Thunderbird の未読を見る | トレイの封筒アイコン（Birdtray / 任意・下記） |
 
-バーに戻したい場合は、`waybar/config.jsonc` の `modules-right` に `"network"` / `"bluetooth"` を足し、
-`hyprland.lua` の `nm-applet` / `blueman-applet` の自動起動を外してください（逆にしないと二重になります）。
+ネットワークと Bluetooth をバーに戻す場合は、`modules-right` に `"network"` / `"bluetooth"` を足すだけでなく、
+`hyprland.lua` の `nm-applet` / `blueman-applet` の自動起動を外してください（片方だけだと二重になります）。
 
-### 数値を出していないモジュール
+### バーに置いていないもの
 
-輝度・CPU・メモリはアイコンだけを表示します。常に眺めるものではないので、
-数値はツールチップに寄せました（ホバーで出ます）。
+バーの右側は **トレイ / 通知 / スリープ抑止 / 音量 / 温度 / バッテリー / 時刻 / 電源** だけです。
+輝度・CPU・メモリ・ネットワーク・Bluetooth のモジュールは置いていません。
 
-| モジュール | バーの表示 | ホバーしたとき |
-| --- | --- | --- |
-| 輝度 | 󰃞 / 󰃟 / 󰃠（3 段階） | `明るさ NN%` |
-| CPU | 󰻠 | `CPU NN%` とロードアベレージ |
-| メモリ | 󰍛 | `メモリ NN%（使用量 / 総量）` |
+| 外したもの | 代わりの見方・操作 |
+| --- | --- |
+| 輝度 | `XF86MonBrightnessUp` / `Down` キー（`hyprland.lua` で `brightnessctl`）。値は `brightnessctl` で確認 |
+| CPU / メモリ | `btop`（`SUPER + Return` で端末を開いて実行） |
+| ネットワーク / Bluetooth | トレイの `nm-applet` / `blueman-applet` アイコン |
 
-CPU とメモリは混んでくると色が変わります（70% / 80% で黄、90% / 92% で赤地）。
-数値をバーに戻すなら `format` を `"󰻠 {usage}%"` のように書き換えてください。
-クリックすれば `btop` が開きます。温度とバッテリーは数値のままです。
+戻したいモジュールがあれば、`waybar/config.jsonc` の `modules-right` に名前を足して
+設定を書いてください。外した経緯と書き方はファイル内のコメントに残してあります。
+温度とバッテリーは数値を出したままです。
 
 ### Wi-Fi メニュー（`SUPER + SHIFT + W`）
 
