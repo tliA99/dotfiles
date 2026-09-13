@@ -434,18 +434,20 @@ hl.window_rule({
     move  = { "monitor_w-660", "monitor_h-400" },
 })
 
--- Thunderbird は起動時からメール用スクラッチパッドに入れておく。
--- silent を付けているので、起動しても画面はそのワークスペースに切り替わりません。
--- SUPER + M で出し入れします。
+-- Thunderbird は起動時からメール用スクラッチパッドに入れておく（SUPER + M で出し入れ）。
 --
--- workspace の綴りが将来変わってもここで設定全体が止まらないよう pcall で包みます
--- （Lua 設定は 1 か所でエラーになると、それ以降の行が読まれなくなるため）。
--- 効いていない場合は `hyprctl clients | grep -A3 thunderbird` でワークスペースを確認し、
--- /usr/share/hypr/stubs/ のフィールド名と突き合わせてください。
-pcall(hl.window_rule, {
+-- hyprlang 時代の `workspace = special:mail silent` という書き方は通りません。
+-- Lua の window_rule に silent というフィールドは無く（unknown field 'silent' になる）、
+-- workspace は HL.WorkspaceSelector = string|integer|HL.Workspace なので文字列だけを渡します。
+--
+-- ルールに書けるフィールドはスタブからは分かりません
+-- （HL.WindowRuleSpec には match / name / enabled しか無いのに float なども通ります）。
+-- 試すなら hyprctl eval が早いです。間違っていればその場でエラーが返ります:
+--   hyprctl eval 'hl.window_rule({ name = "t", match = { class = "^foo$" }, workspace = "special:mail" })'
+hl.window_rule({
     name      = "mail-scratchpad",
     match     = { class = "^([Tt]hunderbird)$" },
-    workspace = "special:mail silent",
+    workspace = "special:mail",
 })
 
 -- ターミナルだけ少し透過させる（blur と相性がいい）
