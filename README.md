@@ -224,7 +224,7 @@ tail -f $XDG_RUNTIME_DIR/hypr/*/hyprland.log
 | Wi-Fi メニューに SSID が出ない | `nmcli device wifi list` が通るか。NetworkManager が止まっていると空になります |
 | Birdtray の色が未読で変わらない | 設定画面で監視フォルダを選べているか。選んだあとに `birdtray-theme.sh` を実行し直してください |
 | Birdtray がアカウントを自動検出しない | プロファイルが `~/.config/thunderbird/` にあるため。`ln -s ~/.config/thunderbird ~/.thunderbird` |
-| Birdtray がトレイに出ない（60 秒後に `system tray cannot be controlled`） | waybar が落ちていてトレイの受け皿（`org.kde.StatusNotifierWatcher`）が無い。waybar を先に起動してから `birdtray &` |
+| Birdtray がトレイに出ない（60 秒後に `system tray cannot be controlled`） | waybar が落ちていてトレイの受け皿（`org.kde.StatusNotifierWatcher`）が無い。waybar を先に起動してから `birdtray &`。waybar を再起動したときも Birdtray を起動し直してください |
 | 日本語が豆腐 | `noto-fonts-cjk` が入っているか |
 | foot が `invalid section name colors` | foot 1.26 で `[colors]` は廃止。`[colors-dark]` / `[colors-light]` に分かれました |
 | ログイン画面が真っ黒 / 出ない | `journalctl -b -u greetd`。`Ctrl+Alt+F2` で TTY に逃げられます |

@@ -116,7 +116,15 @@ hl.on("hyprland.start", function()
 
     -- Thunderbird の未読をトレイに出す。入れていないときは何もしません。
     -- アイコンの色は ~/.config/scripts/birdtray-theme.sh で決めています。
-    hl.exec_cmd("command -v birdtray >/dev/null 2>&1 && birdtray")
+    --
+    -- Birdtray はトレイが無いと 60 秒待って終了します（ソースの
+    -- ensureSystemTrayAvailable）。ログイン直後は waybar のトレイがまだ
+    -- DBus に出ていないため、そのまま起動すると起動順の競合で必ず死にます。
+    -- Qt は一度「トレイ無し」と判断すると待っても復帰しないので、
+    -- org.kde.StatusNotifierWatcher が現れるのを待ってから起動します。
+    hl.exec_cmd("command -v birdtray >/dev/null 2>&1 && " ..
+                "gdbus wait --session --timeout 60 org.kde.StatusNotifierWatcher && " ..
+                "sleep 1 && birdtray")
 
     -- 壁紙。hyprpaper は設定内の path が実在しないと何も出ないので、
     -- setup.sh が ~/Pictures/wallpapers/wall.png を用意してから起動します。
