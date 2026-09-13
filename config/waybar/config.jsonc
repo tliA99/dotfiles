@@ -25,7 +25,8 @@
     "network",
     "bluetooth",
     "battery",
-    "clock"
+    "clock",
+    "custom/power"
   ],
 
   "hyprland/workspaces": {
@@ -147,14 +148,21 @@
     "format-critical": "󰸁 {temperatureC}°C"
   },
 
+  // 左クリックで Wi-Fi メニュー（一覧から接続 / ON・OFF）、
+  // 右クリックで Wi-Fi の ON/OFF を即切り替え、中クリックで nmtui。
+  // スクリプトは ~/.config/scripts/ に置かれます（setup.sh が配置）。
   "network": {
     "format-wifi": "󰤨 {signalStrength}%",
     "format-ethernet": "󰈀 有線",
     "format-linked": "󰈂 {ifname}",
     "format-disconnected": "󰤭 未接続",
-    "tooltip-format-wifi": "{essid}\n{ipaddr}\n↓{bandwidthDownBits} ↑{bandwidthUpBits}",
+    "format-disabled": "󰖪 Wi-Fi OFF",
+    "tooltip-format-wifi": "{essid}\n{ipaddr}\n↓{bandwidthDownBits} ↑{bandwidthUpBits}\n\n左: Wi-Fi メニュー / 右: ON・OFF / 中: nmtui",
     "tooltip-format-ethernet": "{ifname}\n{ipaddr}",
-    "on-click": "foot -e nmtui"
+    "tooltip-format-disconnected": "未接続\n\n左: Wi-Fi メニュー / 右: ON・OFF / 中: nmtui",
+    "on-click": "$HOME/.config/scripts/wifi-menu.sh",
+    "on-click-right": "$HOME/.config/scripts/wifi-menu.sh toggle",
+    "on-click-middle": "foot -e nmtui"
   },
 
   "bluetooth": {
@@ -201,5 +209,16 @@
       "on-scroll-up": "shift_up",
       "on-scroll-down": "shift_down"
     }
+  },
+
+  // 電源メニュー。ロック / サスペンド / 休止 / ログアウト / 再起動 / シャットダウン。
+  // 再起動とシャットダウンは確認を 1 枚はさみます。
+  // SUPER + X でも同じメニューが出ます（hyprland.lua 側で割り当て）。
+  "custom/power": {
+    "format": "󰐥",
+    "tooltip": true,
+    "tooltip-format": "電源メニュー (SUPER + X)",
+    "on-click": "$HOME/.config/scripts/power-menu.sh",
+    "on-click-right": "pidof hyprlock || hyprlock"
   }
 }

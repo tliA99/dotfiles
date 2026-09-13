@@ -34,6 +34,11 @@ local browser      = "firefox"
 local menu         = "wofi --show drun"
 local clipboard    = "cliphist list | wofi --dmenu | cliphist decode | wl-copy"
 
+-- waybar からも同じスクリプトを呼んでいます（setup.sh が ~/.config/scripts/ に配置）
+local scripts      = os.getenv("HOME") .. "/.config/scripts"
+local powermenu    = scripts .. "/power-menu.sh"
+local wifimenu     = scripts .. "/wifi-menu.sh"
+
 ------------------------------------------------------------------ モニタ
 
 -- ★ 表示が大きすぎる / 小さすぎるときは、まずここを変えてください。
@@ -281,6 +286,10 @@ hl.bind(mod .. " + ALT + L", hl.dsp.exec_cmd("pidof hyprlock || hyprlock"), { de
 hl.bind(mod .. " + SHIFT + Q", hl.dsp.exec_cmd(
     "command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"),
     { description = "ログアウト" })
+
+-- 電源メニュー / Wi-Fi メニュー（waybar の 󰐥 と 󰤨 をクリックしても同じものが出ます）
+hl.bind(mod .. " + X",         hl.dsp.exec_cmd(powermenu), { description = "電源メニュー" })
+hl.bind(mod .. " + SHIFT + W", hl.dsp.exec_cmd(wifimenu),  { description = "Wi-Fi メニュー" })
 
 -- --- フォーカス移動（vim 風 + 矢印）
 for key, dir in pairs({ H = "left", L = "right", K = "up", J = "down" }) do
