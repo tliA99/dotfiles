@@ -446,9 +446,12 @@ hl.window_rule({
 -- （HL.WindowRuleSpec には match / name / enabled しか無いのに float なども通ります）。
 -- 試すなら hyprctl eval が早いです。間違っていればその場でエラーが返ります:
 --   hyprctl eval 'hl.window_rule({ name = "t", match = { class = "^foo$" }, workspace = "special:mail" })'
+-- class は Thunderbird 155 の app_id です（`hyprctl clients` で確認）。
+-- 単なる "thunderbird" ではないので注意。古い版や XWayland 経由の場合に備えて
+-- Thunderbird / Mail も見ています。
 hl.window_rule({
     name      = "mail-scratchpad",
-    match     = { class = "^([Tt]hunderbird)$" },
+    match     = { class = "^(org\\.mozilla\\.Thunderbird|[Tt]hunderbird|Mail)$" },
     workspace = "special:mail",
 })
 
