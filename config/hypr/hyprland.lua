@@ -121,7 +121,7 @@ hl.on("hyprland.start", function()
     -- ウィンドウの出現を待ってから閉じています。表示 / 非表示は SUPER + M
     -- （Message の M）。
     hl.exec_cmd(scripts .. "/scratchpad-hidden.sh mail thunderbird '[Tt]hunderbird' thunderbird")
-    hl.exec_cmd(scripts .. "/scratchpad-hidden.sh mail slack Slack slack")
+    hl.exec_cmd(scripts .. "/scratchpad-hidden.sh mail slack '[Ss]lack' slack")
 
     -- Thunderbird の未読をトレイに出す。入れていないときは何もしません。
     -- アイコンの色は ~/.config/scripts/birdtray-theme.sh で決めています。
@@ -460,10 +460,12 @@ hl.window_rule({
     workspace = "special:mail",
 })
 
--- Slack の class は StartupWMClass 通り "Slack" です（`hyprctl clients` で確認）。
+-- Slack の class は `hyprctl clients` で確認すると小文字の "slack" でした
+-- （StartupWMClass の記載や過去のバージョンでは "Slack" ですが、現行の
+-- パッケージでは小文字になっています）。念のため両方見ています。
 hl.window_rule({
     name      = "slack-scratchpad",
-    match     = { class = "^Slack$" },
+    match     = { class = "^[Ss]lack$" },
     workspace = "special:mail",
 })
 
