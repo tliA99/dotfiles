@@ -13,7 +13,7 @@ command -v wofi >/dev/null 2>&1 || { echo "wofi がありません" >&2; exit 1;
 
 menu() {
   local prompt=$1 lines=$2
-  wofi --dmenu --insensitive --prompt "$prompt" --lines "$lines" --width 320 --cache-file /dev/null
+  wofi --dmenu --insensitive --hide-search --prompt "$prompt" --lines "$lines" --width 320 --cache-file /dev/null
 }
 
 confirm() {

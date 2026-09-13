@@ -163,7 +163,7 @@ deploy_all() {
   deploy scripts/wifi-menu.sh      "$HOME/.config/scripts/wifi-menu.sh"
   deploy scripts/power-menu.sh     "$HOME/.config/scripts/power-menu.sh"
   deploy scripts/birdtray-theme.sh "$HOME/.config/scripts/birdtray-theme.sh"
-  deploy scripts/mail-hidden.sh    "$HOME/.config/scripts/mail-hidden.sh"
+  deploy scripts/scratchpad-hidden.sh "$HOME/.config/scripts/scratchpad-hidden.sh"
   chmod +x "$HOME/.config/scripts/"*.sh 2>/dev/null || true
 
   # 0.54 以前の設定が残っていると紛らわしいので退避する
@@ -558,7 +558,7 @@ if have waybar; then
 fi
 
 # 電源メニュー（waybar）と Wi-Fi メニュー（SUPER + SHIFT + W）が叩くスクリプト
-for scr in wifi-menu.sh power-menu.sh birdtray-theme.sh mail-hidden.sh; do
+for scr in wifi-menu.sh power-menu.sh birdtray-theme.sh scratchpad-hidden.sh; do
   if [[ -x "$HOME/.config/scripts/$scr" ]]; then
     if bash -n "$HOME/.config/scripts/$scr" 2>/dev/null; then
       ok "$scr を配置済み（実行可）。"

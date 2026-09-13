@@ -114,12 +114,14 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("nm-applet --indicator")
     hl.exec_cmd("blueman-applet")
 
-    -- メールは常時動かしておく（Birdtray の未読数は Thunderbird が
-    -- 同期して初めて更新されるため）。下のウィンドウルールで special:mail に
-    -- 入りますが、Lua の window_rule には silent が無く、そのままだと開いた
-    -- 瞬間にスクラッチパッドが画面に出ます。スクリプト側でウィンドウの出現を
-    -- 待ってから閉じています。表示 / 非表示は SUPER + M。
-    hl.exec_cmd(scripts .. "/mail-hidden.sh")
+    -- メールと Slack は常時動かしておく（Birdtray の未読数は Thunderbird が
+    -- 同期して初めて更新されるため）。どちらも下のウィンドウルールで
+    -- special:mail に入りますが、Lua の window_rule には silent が無く、
+    -- そのままだと開いた瞬間にスクラッチパッドが画面に出ます。スクリプト側で
+    -- ウィンドウの出現を待ってから閉じています。表示 / 非表示は SUPER + M
+    -- （Message の M）。
+    hl.exec_cmd(scripts .. "/scratchpad-hidden.sh mail thunderbird '[Tt]hunderbird' thunderbird")
+    hl.exec_cmd(scripts .. "/scratchpad-hidden.sh mail slack Slack slack")
 
     -- Thunderbird の未読をトレイに出す。入れていないときは何もしません。
     -- アイコンの色は ~/.config/scripts/birdtray-theme.sh で決めています。
@@ -299,13 +301,14 @@ hl.bind(mod .. " + Return", hl.dsp.exec_cmd(terminal),    { description = "タ�
 hl.bind(mod .. " + D",      hl.dsp.exec_cmd(menu),        { description = "ランチャ" })
 hl.bind(mod .. " + E",      hl.dsp.exec_cmd(fileManager), { description = "ファイラ" })
 hl.bind(mod .. " + B",      hl.dsp.exec_cmd(browser),     { description = "ブラウザ" })
+hl.bind(mod .. " + F",      hl.dsp.exec_cmd(browser),     { description = "ブラウザ" })
 hl.bind(mod .. " + C",      hl.dsp.exec_cmd(clipboard),   { description = "クリップボード履歴" })
 
 -- --- ウィンドウ操作
 hl.bind(mod .. " + Q",          hl.dsp.window.close())
 hl.bind(mod .. " + V",          hl.dsp.window.float())
 hl.bind(mod .. " + P",          hl.dsp.window.pseudo())
-hl.bind(mod .. " + F",          hl.dsp.window.fullscreen({ mode = "fullscreen" }))
+-- フルスクリーン切り替えは F11 で行うので SUPER + F は開けています。
 hl.bind(mod .. " + SHIFT + F",  hl.dsp.window.fullscreen({ mode = "maximized" }))
 hl.bind(mod .. " + T",          hl.dsp.window.center())
 
@@ -353,12 +356,13 @@ end
 hl.bind(mod .. " + S",         hl.dsp.workspace.toggle_special("magic"))
 hl.bind(mod .. " + SHIFT + S", hl.dsp.window.move({ workspace = "special:magic" }))
 
--- メール専用のスクラッチパッド。タイル型には最小化が無いので、その代わりです。
--- Thunderbird はログイン時からここに居ます（画面には出ません）。
+-- メッセージ系アプリ（Message の M）専用のスクラッチパッド。
+-- タイル型には最小化が無いので、その代わりです。
+-- Thunderbird と Slack はログイン時からここに居ます（画面には出ません）。
 hl.bind(mod .. " + M",         hl.dsp.workspace.toggle_special("mail"),
-        { description = "メール（スクラッチパッド）" })
+        { description = "メール・Slack（スクラッチパッド）" })
 hl.bind(mod .. " + SHIFT + M", hl.dsp.window.move({ workspace = "special:mail" }),
-        { description = "ウィンドウをメール用スクラッチパッドへ" })
+        { description = "ウィンドウをメッセージ用スクラッチパッドへ" })
 
 hl.bind(mod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
 hl.bind(mod .. " + mouse_up",   hl.dsp.focus({ workspace = "e-1" }))
@@ -436,7 +440,8 @@ hl.window_rule({
     move  = { "monitor_w-660", "monitor_h-400" },
 })
 
--- Thunderbird は起動時からメール用スクラッチパッドに入れておく（SUPER + M で出し入れ）。
+-- Thunderbird と Slack は起動時からメッセージ用スクラッチパッドに
+-- 入れておく（SUPER + M で出し入れ）。
 --
 -- hyprlang 時代の `workspace = special:mail silent` という書き方は通りません。
 -- Lua の window_rule に silent というフィールドは無く（unknown field 'silent' になる）、
@@ -452,6 +457,13 @@ hl.window_rule({
 hl.window_rule({
     name      = "mail-scratchpad",
     match     = { class = "^(org\\.mozilla\\.Thunderbird|[Tt]hunderbird|Mail)$" },
+    workspace = "special:mail",
+})
+
+-- Slack の class は StartupWMClass 通り "Slack" です（`hyprctl clients` で確認）。
+hl.window_rule({
+    name      = "slack-scratchpad",
+    match     = { class = "^Slack$" },
     workspace = "special:mail",
 })
 
