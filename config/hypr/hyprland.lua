@@ -114,6 +114,11 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("nm-applet --indicator")
     hl.exec_cmd("blueman-applet")
 
+    -- メールは常時動かしておく（Birdtray の未読数は Thunderbird が
+    -- 同期して初めて更新されるため）。下のウィンドウルールで
+    -- special:mail に直行するので、画面には出てきません。
+    hl.exec_cmd("command -v thunderbird >/dev/null 2>&1 && thunderbird")
+
     -- Thunderbird の未読をトレイに出す。入れていないときは何もしません。
     -- アイコンの色は ~/.config/scripts/birdtray-theme.sh で決めています。
     --
@@ -346,6 +351,13 @@ end
 hl.bind(mod .. " + S",         hl.dsp.workspace.toggle_special("magic"))
 hl.bind(mod .. " + SHIFT + S", hl.dsp.window.move({ workspace = "special:magic" }))
 
+-- メール専用のスクラッチパッド。タイル型には最小化が無いので、その代わりです。
+-- Thunderbird はログイン時からここに居ます（画面には出ません）。
+hl.bind(mod .. " + M",         hl.dsp.workspace.toggle_special("mail"),
+        { description = "メール（スクラッチパッド）" })
+hl.bind(mod .. " + SHIFT + M", hl.dsp.window.move({ workspace = "special:mail" }),
+        { description = "ウィンドウをメール用スクラッチパッドへ" })
+
 hl.bind(mod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
 hl.bind(mod .. " + mouse_up",   hl.dsp.focus({ workspace = "e-1" }))
 
@@ -420,6 +432,20 @@ hl.window_rule({
     pin   = true,
     size  = { 640, 360 },
     move  = { "monitor_w-660", "monitor_h-400" },
+})
+
+-- Thunderbird は起動時からメール用スクラッチパッドに入れておく。
+-- silent を付けているので、起動しても画面はそのワークスペースに切り替わりません。
+-- SUPER + M で出し入れします。
+--
+-- workspace の綴りが将来変わってもここで設定全体が止まらないよう pcall で包みます
+-- （Lua 設定は 1 か所でエラーになると、それ以降の行が読まれなくなるため）。
+-- 効いていない場合は `hyprctl clients | grep -A3 thunderbird` でワークスペースを確認し、
+-- /usr/share/hypr/stubs/ のフィールド名と突き合わせてください。
+pcall(hl.window_rule, {
+    name      = "mail-scratchpad",
+    match     = { class = "^([Tt]hunderbird)$" },
+    workspace = "special:mail silent",
 })
 
 -- ターミナルだけ少し透過させる（blur と相性がいい）
