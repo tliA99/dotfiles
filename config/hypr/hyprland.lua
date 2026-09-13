@@ -61,7 +61,7 @@ local wifimenu     = scripts .. "/wifi-menu.sh"
 -- 割り切れる（1920/1.25 = 1536、1080/1.25 = 864）ので表示がにじみません。
 -- 端数倍率なので XWayland 経由のアプリ（Zoom や一部の Electron など）は
 -- 少しぼやけます。気になる場合は 1 に戻すか、下の xwayland の項を読んでください。
-local monitor_scale = 1.25
+local monitor_scale = 1
 
 hl.monitor({
     output   = "eDP-1",
