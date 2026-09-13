@@ -118,8 +118,6 @@ window#waybar.empty .modules-center {
 #cpu,
 #memory,
 #temperature,
-#network,
-#bluetooth,
 #battery,
 #clock,
 #custom-power {
@@ -138,10 +136,19 @@ window#waybar.empty .modules-center {
 #cpu                 { color: @green; }
 #memory              { color: @magenta; }
 #temperature         { color: @cyan; }
-#network             { color: @blue; }
-#network.disconnected { color: @red; }
-#bluetooth           { color: @blue; }
-#bluetooth.disabled  { color: @muted; }
+
+/* 使用率の数値はバーに出していないので、混んできたら色で知らせます
+   （正確な値はツールチップか btop で）。
+   ネットワークと Bluetooth は nm-applet / blueman-applet のトレイアイコンに
+   任せているので、ここにスタイルはありません。 */
+#cpu.warning,
+#memory.warning { color: @yellow; }
+
+#cpu.critical,
+#memory.critical {
+  color: @bg_solid;
+  background: @red;
+}
 
 #temperature.critical {
   color: @bg_solid;

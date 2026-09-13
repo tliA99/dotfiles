@@ -287,7 +287,9 @@ hl.bind(mod .. " + SHIFT + Q", hl.dsp.exec_cmd(
     "command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"),
     { description = "ログアウト" })
 
--- 電源メニュー / Wi-Fi メニュー（waybar の 󰐥 と 󰤨 をクリックしても同じものが出ます）
+-- 電源メニューは waybar の 󰐥 をクリックしても出ます。
+-- Wi-Fi はトレイの nm-applet に任せているので、バーにボタンはありません。
+-- キーボードから繋ぎたいときはこのメニューを使います。
 hl.bind(mod .. " + X",         hl.dsp.exec_cmd(powermenu), { description = "電源メニュー" })
 hl.bind(mod .. " + SHIFT + W", hl.dsp.exec_cmd(wifimenu),  { description = "Wi-Fi メニュー" })
 

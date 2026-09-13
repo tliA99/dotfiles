@@ -521,7 +521,7 @@ if have waybar; then
   fi
 fi
 
-# waybar の Wi-Fi / 電源メニューはこのスクリプトを叩くので、実行できるか見ておく
+# 電源メニュー（waybar）と Wi-Fi メニュー（SUPER + SHIFT + W）が叩くスクリプト
 for scr in wifi-menu.sh power-menu.sh; do
   if [[ -x "$HOME/.config/scripts/$scr" ]]; then
     if bash -n "$HOME/.config/scripts/$scr" 2>/dev/null; then
@@ -537,13 +537,13 @@ done
 # Wi-Fi メニューは nmcli 経由で NetworkManager を触ります
 if have nmcli; then
   if systemctl is-enabled NetworkManager.service >/dev/null 2>&1; then
-    ok "NetworkManager は有効です（waybar から Wi-Fi を ON/OFF できます）。"
+    ok "NetworkManager は有効です（トレイのアイコンと Wi-Fi メニューが使えます）。"
   else
-    warn "NetworkManager が有効ではありません。waybar の Wi-Fi メニューは動きません。"
+    warn "NetworkManager が有効ではありません。Wi-Fi メニューもトレイのアイコンも動きません。"
     NOTES+=("sudo systemctl enable --now NetworkManager で有効にしてください。")
   fi
 else
-  warn "nmcli がありません。waybar の Wi-Fi メニューは動きません。"
+  warn "nmcli がありません。Wi-Fi メニューは動きません。"
 fi
 
 for f in hypridle.conf hyprlock.conf hyprpaper.conf; do
