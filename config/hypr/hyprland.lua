@@ -115,9 +115,11 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("blueman-applet")
 
     -- メールは常時動かしておく（Birdtray の未読数は Thunderbird が
-    -- 同期して初めて更新されるため）。下のウィンドウルールで
-    -- special:mail に直行するので、画面には出てきません。
-    hl.exec_cmd("command -v thunderbird >/dev/null 2>&1 && thunderbird")
+    -- 同期して初めて更新されるため）。下のウィンドウルールで special:mail に
+    -- 入りますが、Lua の window_rule には silent が無く、そのままだと開いた
+    -- 瞬間にスクラッチパッドが画面に出ます。スクリプト側でウィンドウの出現を
+    -- 待ってから閉じています。表示 / 非表示は SUPER + M。
+    hl.exec_cmd(scripts .. "/mail-hidden.sh")
 
     -- Thunderbird の未読をトレイに出す。入れていないときは何もしません。
     -- アイコンの色は ~/.config/scripts/birdtray-theme.sh で決めています。
